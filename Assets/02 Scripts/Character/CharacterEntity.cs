@@ -12,7 +12,7 @@ public class CharacterEntity : MonoBehaviour
 
     public void Initialize(CharacterData data)
     {
-        Data = data;
+        Data = data; 
         Brain = new CharacterBrain();
         Condition = new CharacterConditionController();
     }
@@ -25,4 +25,14 @@ public class CharacterEntity : MonoBehaviour
         Condition.ApplyActionResult(Data, result, ctx);
         return result.LogText;
     }
+    private void OnEnable()
+    {
+        CharacterManager.Instance.Register(this);
+    }
+
+    private void OnDisable()
+    {
+        CharacterManager.Instance.Unregister(this);
+    }
+
 }

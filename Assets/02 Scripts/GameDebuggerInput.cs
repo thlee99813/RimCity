@@ -5,7 +5,12 @@ public class GameDebuggerInput : MonoBehaviour
 {
     private void Update()
     {
-        if (Keyboard.current.digit1Key.wasPressedThisFrame)
+        if (Keyboard.current.digit0Key.wasPressedThisFrame)
+        {
+            CameraManager.Instance.ActivateCamera(0);
+            StageManager.Instance.SetStageActive(0, true);
+        }
+        else if (Keyboard.current.digit1Key.wasPressedThisFrame)
         {
             CameraManager.Instance.ActivateCamera(1);
             StageManager.Instance.SetStageActive(1, true);
