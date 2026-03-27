@@ -7,24 +7,12 @@ public class CharacterEntity : MonoBehaviour
 
     public CharacterData Data;
 
-    public CharacterBrain Brain;
-    public CharacterConditionController Condition;
 
     public void Initialize(CharacterData data)
     {
         Data = data; 
-        Brain = new CharacterBrain();
-        Condition = new CharacterConditionController();
     }
 
-    public string RunSmallTurn(TurnContext ctx)
-    {
-        Condition.Tick(Data, ctx); 
-        CharacterAction action = Brain.DecideAction(Data, ctx);
-        ActionResult result = action.Execute(this, ctx);
-        Condition.ApplyActionResult(Data, result, ctx);
-        return result.LogText;
-    }
     private void OnEnable()
     {
         CharacterManager.Instance.Register(this);
