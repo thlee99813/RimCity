@@ -1,5 +1,6 @@
 using UnityEngine;
 using TMPro;
+using System.Collections.Generic;
 
 public class UIManager : Singleton<UIManager>
 {
@@ -10,7 +11,8 @@ public class UIManager : Singleton<UIManager>
         _smallTurnPage.SetActive(false);
         _bigTurnPage.SetActive(false);
         ResultBigChoiceSelect.SetActive(false);
-        //_ingameBackGround.SetActive(false);
+
+        
 
     }    
     
@@ -23,6 +25,17 @@ public class UIManager : Singleton<UIManager>
 
     [SerializeField] public GameObject ResultBigChoiceSelect;
 
+    [Header("Header Slot Spawn")]
+
+    [SerializeField] private CharacterHeaderSlotUI _slotPrefab;
+    [SerializeField] private Transform _slotParent;
+    [SerializeField] private int _maxSlots = 20;
+
+    private readonly List<CharacterHeaderSlotUI> _spawnedSlots = new List<CharacterHeaderSlotUI>();
+
+
+    private int _slotCount = 0;
+
     public void SmallTurnStart()
     {
         _smallTurnPage.SetActive(true);
@@ -33,7 +46,16 @@ public class UIManager : Singleton<UIManager>
         _smallTurnPage.SetActive(false);
 
     }
-
+    public void AddCharacterSlot(string characterName)
+    {
+        
+        if (_spawnedSlots.Count >= _maxSlots) return;
+        
+        GameObject slotObject = Instantiate(_slotPrefab.gameObject, _slotParent);
+        CharacterHeaderSlotUI slotUI = slotObject.GetComponent<CharacterHeaderSlotUI>();
+        slotUI.SetName(characterName);
+        _spawnedSlots.Add(slotUI);
+    }
 
     
 }
