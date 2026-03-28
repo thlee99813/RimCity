@@ -26,11 +26,14 @@ public class GameManager : Singleton<GameManager>
     {
         if (!ActiveStages.Contains(stageContext))
             ActiveStages.Add(stageContext);
+
+            
     }
 
     public void UnregisterStage(StageContext stageContext)
     {
         ActiveStages.Remove(stageContext);
+
     }
     public StageContext GetAnyActiveStage()
     {

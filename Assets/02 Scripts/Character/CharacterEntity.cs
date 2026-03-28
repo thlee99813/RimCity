@@ -10,8 +10,7 @@ public class CharacterEntity : MonoBehaviour
 
     public CharacterData Data;
     private CharacterBrain _brain = new CharacterBrain();
-    public Transform CurrentTile { get; private set; }
-
+    public TileNode CurrentTileNode { get; private set; }
     [SerializeField] private float _moveDuration = 0.35f;
 
 
@@ -31,84 +30,83 @@ public class CharacterEntity : MonoBehaviour
     {
         CharacterManager.Instance.Unregister(this);
     }
-    public IEnumerator RunSmallTurn(BigTurnSelectionData selection, int bigTurn, int smallTurn, List<Transform> activeTiles, SmallTurnLogController logController)
-
+    public IEnumerator RunSmallTurn(
+    BigTurnSelectionData selection,
+    int bigTurn,
+    int smallTurn,
+    List<TileNode> activeNodes,
+    SmallTurnLogController logController)
     {
-    SmallTurnActionType action = _brain.DecideSmallTurnAction(Data, selection);
+        SmallTurnActionType action = _brain.DecideSmallTurnAction(Data, selection);
 
-    string logLine = TextUtil.ApplyKoreanParticles($"[{smallTurn} 턴] {Data.Name}은/는 {ToActionText(action)}");
-    logController.AddLog(logLine);
+        string logLine = TextUtil.ApplyKoreanParticles($"[{smallTurn} 턴] {Data.Name}은/는 {ToActionText(action)}");
+        logController.AddLog(logLine);
 
-    if (activeTiles == null || activeTiles.Count == 0)
-        yield break;
+        if (activeNodes == null || activeNodes.Count == 0) yield break;
 
-    if (CurrentTile == null)
-        SetCurrentTile(GetNearestTile(activeTiles, transform.position));
+        if (CurrentTileNode == null)
+            SetCurrentTileNode(GetNearestTileNode(activeNodes, transform.position));
 
-    if (action == SmallTurnActionType.Wander || action == SmallTurnActionType.Gather)
-    {
-        Transform nextTile = GetRandomNeighborTile(activeTiles, CurrentTile);
-        if (nextTile != null)
-            yield return MoveToTile(nextTile);
+        if (action == SmallTurnActionType.Wander || action == SmallTurnActionType.Gather)
+        {
+            TileNode nextNode = GetRandomNeighborNode(CurrentTileNode, activeNodes);
+            if (nextNode != null)
+                yield return MoveToTile(nextNode); 
+        }
     }
-}
-
-    private IEnumerator MoveToTile(Transform targetTile)
+    private void SetCurrentTileNode(TileNode node)
     {
-        Vector3 target = new Vector3(targetTile.position.x, transform.position.y, targetTile.position.z);
+        CurrentTileNode = node;
+        Vector3 p = transform.position;
+        p.x = node.WorldPosition.x;
+        p.z = node.WorldPosition.z;
+        transform.position = p;
+    }
+
+
+    private IEnumerator MoveToTile(TileNode targetNode)
+    {
+        Vector3 target = new Vector3(targetNode.WorldPosition.x, transform.position.y, targetNode.WorldPosition.z);
         Tween tween = transform.DOMove(target, _moveDuration).SetEase(Ease.Linear);
         yield return tween.WaitForCompletion();
-        CurrentTile = targetTile;
+        CurrentTileNode = targetNode;
     }
     
-    private Transform GetNearestTile(List<Transform> tiles, Vector3 worldPosition)
+   
+    private TileNode GetNearestTileNode(List<TileNode> nodes, Vector3 worldPos)
     {
-        Transform best = null;
+        TileNode best = null;
         float bestSqr = float.MaxValue;
 
-        for (int i = 0; i < tiles.Count; i++)
+        for (int i = 0; i < nodes.Count; i++)
         {
-            float sqr = (tiles[i].position - worldPosition).sqrMagnitude;
+            float sqr = (nodes[i].WorldPosition - worldPos).sqrMagnitude;
             if (sqr < bestSqr)
             {
                 bestSqr = sqr;
-                best = tiles[i];
+                best = nodes[i];
             }
         }
 
         return best;
     }
-    private Transform GetRandomNeighborTile(List<Transform> tiles, Transform currentTile)
+
+  
+
+    private TileNode GetRandomNeighborNode(TileNode current, List<TileNode> activeNodes)
     {
-        if (currentTile == null) return null;
+        if (current == null) return null;
 
-        List<Transform> neighbors = new List<Transform>();
-
-        float minDist = float.MaxValue;
-        for (int i = 0; i < tiles.Count; i++)
+        List<TileNode> valid = new List<TileNode>();
+        for (int i = 0; i < current.Neighbors.Count; i++)
         {
-            if (tiles[i] == currentTile) continue;
-            float d = Vector3.Distance(currentTile.position, tiles[i].position);
-            if (d > 0.01f && d < minDist) minDist = d;
+            TileNode n = current.Neighbors[i];
+            if (activeNodes.Contains(n)) valid.Add(n);
         }
 
-        if (minDist == float.MaxValue) return currentTile;
-
-        float tolerance = minDist * 0.25f;
-
-        for (int i = 0; i < tiles.Count; i++)
-        {
-            if (tiles[i] == currentTile) continue;
-            float d = Vector3.Distance(currentTile.position, tiles[i].position);
-            if (Mathf.Abs(d - minDist) <= tolerance)
-                neighbors.Add(tiles[i]);
-        }
-
-        if (neighbors.Count == 0) return currentTile;
-        return neighbors[Random.Range(0, neighbors.Count)];
+        if (valid.Count == 0) return current;
+        return valid[UnityEngine.Random.Range(0, valid.Count)];
     }
-
-
 
     private string ToActionText(SmallTurnActionType action) 
     { 
@@ -126,15 +124,6 @@ public class CharacterEntity : MonoBehaviour
         } 
     }
 
-    private void SetCurrentTile(Transform tile)
-    {
-        CurrentTile = tile;
-        Vector3 pos = transform.position;
-        pos.x = tile.position.x;
-        pos.z = tile.position.z;
-        transform.position = pos;
-    }
-    
 
 
 }

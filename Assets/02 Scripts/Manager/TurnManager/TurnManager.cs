@@ -65,34 +65,32 @@ public class TurnManager : Singleton<TurnManager>
 
     private IEnumerator RunOneSmallTurn()
     {
-        List<Transform> activeTiles = CollectActiveTiles();
-        if (activeTiles.Count == 0) yield break;
+        List<TileNode> activeNodes = CollectActiveTileNodes();
+        if (activeNodes.Count == 0) yield break;
 
         for (int i = 0; i < CharacterManager.Instance.ActiveCharacters.Count; i++)
         {
             CharacterEntity character = CharacterManager.Instance.ActiveCharacters[i];
             yield return StartCoroutine(
-                character.RunSmallTurn(_currentSelection, CurrentBigTurn, CurrentSmallTurn, activeTiles, _smallTurnLogController)
+                character.RunSmallTurn(_currentSelection, CurrentBigTurn, CurrentSmallTurn, activeNodes, _smallTurnLogController)
             );
         }
-
     }
-    private List<Transform> CollectActiveTiles()
+
+    private List<TileNode> CollectActiveTileNodes()
     {
-        List<Transform> tiles = new List<Transform>();
+        List<TileNode> nodes = new List<TileNode>();
 
         for (int i = 0; i < GameManager.Instance.ActiveStages.Count; i++)
         {
             StageContext stage = GameManager.Instance.ActiveStages[i];
-            Transform[] stageTiles = stage.Tiles;
+            TileNode[] stageNodes = stage.TileNodes;
 
-            for (int j = 0; j < stageTiles.Length; j++)
-            {
-                tiles.Add(stageTiles[j]);
-            }
+            for (int j = 0; j < stageNodes.Length; j++)
+                nodes.Add(stageNodes[j]);
         }
 
-        return tiles;
+        return nodes;
     }
     public void ApplyBigTurnSelection(BigTurnSelectionData selection)
     {

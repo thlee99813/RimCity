@@ -31,21 +31,18 @@ public class MapResourceSpawner : MonoBehaviour
     private void OnStageActivated(MEventType eventType, Component sender, System.EventArgs args)
     {
         StageActivatedEventArgs eventArgs = (StageActivatedEventArgs)args;
-        RespawnByTileProbability(eventArgs.StageContext.Tiles); 
+        RespawnByTileProbability(eventArgs.StageContext.TileNodes);
     }
 
-    private void RespawnByTileProbability(Transform[] tiles)
+    private void RespawnByTileProbability(TileNode[] tiles)
     {
-
         for (int i = 0; i < tiles.Length; i++)
         {
             int tileNumber = i + 1;
-            if (IsBlockedTile(tileNumber))
-                continue;
+            if (IsBlockedTile(tileNumber)) continue;
 
             ResourceType spawnType = PickSpawnType();
-            if (spawnType == ResourceType.None)
-                continue;
+            if (spawnType == ResourceType.None) continue;
 
             SpawnAtTile(tiles, i, spawnType);
         }
@@ -76,16 +73,13 @@ public class MapResourceSpawner : MonoBehaviour
         return ResourceType.Rock;
     }
 
-    private void SpawnAtTile(Transform[] tiles, int tileIndex, ResourceType spawnType)
+    private void SpawnAtTile(TileNode[] tiles, int tileIndex, ResourceType spawnType)
     {
-        Transform tile = tiles[tileIndex];
-        Vector3 spawnPos = tile.position + new Vector3(0f, _yOffset, 0f);
-
+        Vector3 spawnPos = tiles[tileIndex].WorldPosition + new Vector3(0f, _yOffset, 0f);
         GameObject prefab = GetPrefab(spawnType);
-        if (prefab == null)
-            return;
+        if (prefab == null) return;
 
-        Instantiate(prefab, spawnPos, Quaternion.identity, tile);
+        Instantiate(prefab, spawnPos, Quaternion.identity, tiles[tileIndex].transform);
     }
 
     private GameObject GetPrefab(ResourceType spawnType)
