@@ -4,6 +4,8 @@ using System.Collections.Generic;
 public class BigTurnUIController : MonoBehaviour
 {
     [SerializeField] private GameObject _bigTurnUI;
+
+    [SerializeField] private TMP_Text _bigTurnResultText;
     [Header("UI Page")]
 
     [SerializeField] private GameObject _policyPanel;
@@ -65,6 +67,12 @@ public class BigTurnUIController : MonoBehaviour
 
     public void Confirm()
     {
+
+        UIManager.Instance.ResultBigChoiceSelect.SetActive(true);
+        _bigTurnResultText.text =
+        $"{TextUtil.TranslateKorean(_selectedPolicy)}\n" +
+        $"{TextUtil.TranslateKorean(_selectedWeather)}";
+
         BigTurnSelectionData selection = new BigTurnSelectionData
         {
             Policy = _selectedPolicy,

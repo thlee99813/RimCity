@@ -9,7 +9,8 @@ public class UIManager : Singleton<UIManager>
         _nextPage.SetActive(false);
         _smallTurnPage.SetActive(false);
         _bigTurnPage.SetActive(false);
-        _ingameBackGround.SetActive(false);
+        ResultBigChoiceSelect.SetActive(false);
+        //_ingameBackGround.SetActive(false);
 
     }    
     
@@ -20,6 +21,18 @@ public class UIManager : Singleton<UIManager>
     [SerializeField] private GameObject _bigTurnPage;
     [SerializeField] private GameObject _ingameBackGround;
 
+    [SerializeField] public GameObject ResultBigChoiceSelect;
+
+    public void SmallTurnStart()
+    {
+        _smallTurnPage.SetActive(true);
+
+    }
+    public void SmallTurnEnd()
+    {
+        _smallTurnPage.SetActive(false);
+
+    }
 
 
     

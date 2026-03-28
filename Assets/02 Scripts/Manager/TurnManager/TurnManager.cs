@@ -5,8 +5,14 @@ using UnityEngine;
 public class TurnManager : Singleton<TurnManager>
 {
     [SerializeField] private BigTurnUIController _bTUIController;
+    
+    [SerializeField] private SmallTurnLogController _smallTurnLogController;
+
+    
     [SerializeField] private int _smallTurnsPerBigTurn = 5;
-    [SerializeField] private float _smallTurnInterval = 0.3f;
+    [SerializeField] private float _smallTurnInterval = 1f;
+    
+
 
     public int CurrentBigTurn { get; private set; }
     public int CurrentSmallTurn { get; private set; }
@@ -32,7 +38,11 @@ public class TurnManager : Singleton<TurnManager>
     {
         while (true)
         {
+            UIManager.Instance.SmallTurnEnd();
+
             yield return StartCoroutine(OpenBigTurnUIAndWait());
+
+            UIManager.Instance.SmallTurnStart();
 
             for (int i = 0; i < _smallTurnsPerBigTurn; i++)
             {
@@ -40,7 +50,7 @@ public class TurnManager : Singleton<TurnManager>
                 RunOneSmallTurn();
                 yield return new WaitForSeconds(_smallTurnInterval);
             }
-
+            _smallTurnLogController.ClearLogs();
             CurrentBigTurn++;
             CurrentSmallTurn = 0;
         }
@@ -53,9 +63,15 @@ public class TurnManager : Singleton<TurnManager>
     }
 
     private void RunOneSmallTurn()
+
     {
-        // 나중에 실제 행동 처리 연결
-        Debug.Log($"[BigTurn {CurrentBigTurn}] SmallTurn {CurrentSmallTurn} 진행");
+        for (int i = 0; i < CharacterManager.Instance.ActiveCharacters.Count; i++)
+        {
+                CharacterEntity character = CharacterManager.Instance.ActiveCharacters[i];
+                string logLine = character.RunSmallTurn(_currentSelection, CurrentBigTurn, CurrentSmallTurn);
+                _smallTurnLogController.AddLog(logLine);
+        }
+        
     }
 
     public void ApplyBigTurnSelection(BigTurnSelectionData selection)

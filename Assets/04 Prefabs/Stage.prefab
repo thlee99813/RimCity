@@ -136,6 +136,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 7906712030047589652}
+  - component: {fileID: 6338414290011462815}
   m_Layer: 0
   m_Name: Stage
   m_TagString: Untagged
@@ -175,6 +176,35 @@ Transform:
   - {fileID: 287600708535472}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &6338414290011462815
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3092828167580408153}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 30c6cbc4975932f4eb00ce62b2031064, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::StageContext
+  _tiles:
+  - {fileID: 6627624723195926129}
+  - {fileID: 8509635233251309294}
+  - {fileID: 8235633313525875324}
+  - {fileID: 7394992792033022426}
+  - {fileID: 8067311184976042743}
+  - {fileID: 6109163978559257416}
+  - {fileID: 6695160771045799674}
+  - {fileID: 1154499251129809839}
+  - {fileID: 4539442959225407638}
+  - {fileID: 6480100714765276118}
+  - {fileID: 2578168001679905946}
+  - {fileID: 8757814325743899489}
+  - {fileID: 8136276429907344885}
+  - {fileID: 6764385698392650184}
+  - {fileID: 2047076710373805517}
+  - {fileID: 870455019151612434}
 --- !u!1001 &1727794653221837268
 PrefabInstance:
   m_ObjectHideFlags: 0

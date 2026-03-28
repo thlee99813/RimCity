@@ -1,24 +1,8 @@
 ﻿public enum MEventType
 {
 
-    StageStarted,
-    StageCleared,
-    StageFailed,
-    StageExited,
+  Stageactivated
+
     
-    StartingCutScene,
-    TutorialStarted,
-
-    ComboHit,
-
-
-    TrainTimeChanged,
-    TrainTimeOver,
-
-    DestroyEnemy,
-    DestroyBread,
-    DestroyBuilding
-
-
-
+    
 }

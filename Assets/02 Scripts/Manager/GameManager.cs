@@ -14,5 +14,10 @@ public class GameManager : Singleton<GameManager>
         TurnManager.Instance.StartTurnLoop();
     }
 
+    public void StageActive(StageContext stageContext)
+    {
+        EventManager.Instance.PostNotification( MEventType.Stageactivated, this, new StageActivatedEventArgs(stageContext));
+    }
+
     
 }

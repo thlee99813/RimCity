@@ -2,17 +2,12 @@
 using UnityEngine;
 
 [Serializable]
-public class TransformEventArgs : EventArgs
+public class StageActivatedEventArgs : EventArgs
 {
-    public Transform transform;
-    public object[] value;
-
-    public TransformEventArgs(Transform transform, params object[] value)
+    public StageContext StageContext;
+    public StageActivatedEventArgs(StageContext stageContext)
     {
-        this.transform = transform;
-        this.value = value;
+        StageContext = stageContext;
     }
-
-    
 }
 
