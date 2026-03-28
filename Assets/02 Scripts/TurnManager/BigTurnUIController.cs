@@ -3,13 +3,20 @@ using TMPro;
 using System.Collections.Generic;
 public class BigTurnUIController : MonoBehaviour
 {
-    [SerializeField] private GameObject _root;
+    [SerializeField] private GameObject _bigTurnUI;
+    [Header("UI Page")]
+
+    [SerializeField] private GameObject _policyPanel;
+    [SerializeField] private GameObject _weatherPanel;
+    [SerializeField] private GameObject _eventPanel;
+    [SerializeField] private GameObject _expandPanel;
 
     [Header("Option Text")]
     [SerializeField] private TMP_Text _weatherOptionTextA;
     [SerializeField] private TMP_Text _weatherOptionTextB;
-    [SerializeField] private TMP_Text _eventOptionTextA;
-    [SerializeField] private TMP_Text _eventOptionTextB;
+    [SerializeField] private GameObject[] _eventOptionButtons;
+    [SerializeField] private TMP_Text[] _eventOptionTexts;
+
 
     private PolicyType _selectedPolicy;
     private WeatherType _selectedWeather;
@@ -17,38 +24,45 @@ public class BigTurnUIController : MonoBehaviour
     private bool _selectedExpand;
 
     private WeatherType[] _weatherOptions = new WeatherType[2];
-    private WorldEventType[] _eventOptions = new WorldEventType[2];
+    private WorldEventType[] _eventOptions;
 
     public void Open(int bigTurnIndex, BigTurnSelectionData prevSelection)
     {
-        _root.SetActive(true);
+        _bigTurnUI.SetActive(true);
+        ShowOnly(_policyPanel);
+
+
 
         _selectedPolicy = prevSelection.Policy;
         _selectedExpand = prevSelection.ExpandTerritory;
 
         _weatherOptions = PickRandomWeatherOptions();
-        _eventOptions = PickRandomEventOptions();
+
+        int eventOptionCount = UnityEngine.Random.Range(2, 5);
+        _eventOptions = PickRandomEventOptions(eventOptionCount);
 
         _selectedWeather = _weatherOptions[0];
         _selectedEvent = _eventOptions[0];
 
-        _weatherOptionTextA.text = _weatherOptions[0].ToString();
-        _weatherOptionTextB.text = _weatherOptions[1].ToString();
-        _eventOptionTextA.text = _eventOptions[0].ToString();
-        _eventOptionTextB.text = _eventOptions[1].ToString();
+        _weatherOptionTextA.text = TextUtil.TranslateKorean(_weatherOptions[0]);
+        _weatherOptionTextB.text = TextUtil.TranslateKorean(_weatherOptions[1]);
+
+
+        for (int i = 0; i < _eventOptionTexts.Length; i++)
+        {
+            bool active = i < _eventOptions.Length;
+            _eventOptionButtons[i].SetActive(active);
+            if (active) _eventOptionTexts[i].text = TextUtil.TranslateKorean(_eventOptions[i]);
+        }
     }
 
     public void Close()
     {
-        _root.SetActive(false);
+        _bigTurnUI.SetActive(false);
     }
 
-    public void SelectPolicy(int value) { _selectedPolicy = (PolicyType)value; }
-    public void SelectWeather(int optionIndex) { _selectedWeather = _weatherOptions[optionIndex]; }
-    public void SelectEvent(int optionIndex) { _selectedEvent = _eventOptions[optionIndex]; }
-    public void SelectExpand(bool value) { _selectedExpand = value; }
 
-    // 확인 버튼
+
     public void Confirm()
     {
         BigTurnSelectionData selection = new BigTurnSelectionData
@@ -113,21 +127,57 @@ public class BigTurnUIController : MonoBehaviour
         return new WeatherType[] { first, second };
     }
 
-    private WorldEventType[] PickRandomEventOptions()
+    private WorldEventType[] PickRandomEventOptions(int count)
     {
-        Dictionary<WorldEventType, int> eventWeights = new Dictionary<WorldEventType, int>
+        Dictionary<WorldEventType, int> weights  = new Dictionary<WorldEventType, int>
         {
             { WorldEventType.None, 50 },
             { WorldEventType.Visitor, 35 },
             { WorldEventType.Raid, 15 }
         };
 
-        WorldEventType first = WeightedPick(eventWeights);
+        List<WorldEventType> selected = new List<WorldEventType>();
+        Dictionary<WorldEventType, int> pool = new Dictionary<WorldEventType, int>(weights);
 
-        Dictionary<WorldEventType, int> secondPool = new Dictionary<WorldEventType, int>(eventWeights);
-        secondPool.Remove(first);
-        WorldEventType second = WeightedPick(secondPool);
+        int safeCount = Mathf.Min(count, pool.Count);
 
-        return new WorldEventType[] { first, second };
+        for (int i = 0; i < safeCount; i++)
+        {
+            WorldEventType picked = WeightedPick(pool);
+            selected.Add(picked);
+            pool.Remove(picked);
+        }
+
+        return selected.ToArray();
+    }
+    private void ShowOnly(GameObject panel)
+    {
+        _policyPanel.SetActive(panel == _policyPanel);
+        _weatherPanel.SetActive(panel == _weatherPanel);
+        _eventPanel.SetActive(panel == _eventPanel);
+        _expandPanel.SetActive(panel == _expandPanel);
+    }
+
+    public void SelectPolicy(int value)
+    {
+        _selectedPolicy = (PolicyType)value;
+        ShowOnly(_weatherPanel);
+    }
+
+    public void SelectWeather(int optionIndex)
+    {
+        _selectedWeather = _weatherOptions[optionIndex];
+        ShowOnly(_eventPanel);
+    }
+
+    public void SelectEvent(int optionIndex)
+    {
+        _selectedEvent = _eventOptions[optionIndex];
+        ShowOnly(_expandPanel);
+    }
+    public void SelectExpand(bool value)
+    {
+        _selectedExpand = value;
+        Confirm();
     }
 }

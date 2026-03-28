@@ -9,5 +9,10 @@ public class GameManager : Singleton<GameManager>
     
     public CharacterGenerator CharacterGenerator;
 
+    public void StartFirstTurn()
+    {
+        TurnManager.Instance.StartTurnLoop();
+    }
+
     
 }

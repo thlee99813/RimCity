@@ -1,4 +1,4 @@
-public static class CharacterTextUtil
+public static class TextUtil
 {
     public static string TranslateKorean(Gender g)
     {
@@ -36,6 +36,32 @@ public static class CharacterTextUtil
             StatType.Gather => "수집",
             StatType.Social => "매력",
             _ => s.ToString()
+        };
+    }
+    public static string TranslateKorean(WeatherType weather)
+    {
+        return weather switch
+        {
+            WeatherType.Mild => "온화함",
+            WeatherType.Hot => "약한 더위",
+            WeatherType.Cold => "약한 추위",
+            WeatherType.Heatwave => "폭염",
+            WeatherType.Drought => "가뭄",
+            WeatherType.Flood => "홍수",
+            WeatherType.Snowstorm => "폭설",
+            WeatherType.ExtremeCold => "혹한",
+            _ => weather.ToString()
+        };
+    }
+
+    public static string TranslateKorean(WorldEventType worldEvent)
+    {
+        return worldEvent switch
+        {
+            WorldEventType.None => "아무 일도 없음",
+            WorldEventType.Visitor => "방문자 등장",
+            WorldEventType.Raid => "습격 발생",
+            _ => worldEvent.ToString()
         };
     }
 }

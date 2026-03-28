@@ -48,7 +48,7 @@ public class CharacterGenerateUI : MonoBehaviour
     private void ApplyCharacterToUI(CharacterData data)
     {
         _nameText.text = data.Name;
-        _genderAgeText.text = $"{CharacterTextUtil.TranslateKorean(data.Gender)} / {data.Age}";
+        _genderAgeText.text = $"{TextUtil.TranslateKorean(data.Gender)} / {data.Age}";
 
         SetGauge(_combatBoxes, data.Stats[StatType.Combat]);
         SetGauge(_craftBoxes,  data.Stats[StatType.Craft]);
@@ -56,7 +56,7 @@ public class CharacterGenerateUI : MonoBehaviour
         SetGauge(_gatherBoxes, data.Stats[StatType.Gather]);
         SetGauge(_socialBoxes, data.Stats[StatType.Social]);
 
-        _traitsText.text = data.Traits.Count > 0? string.Join("\n", data.Traits.ConvertAll(CharacterTextUtil.TranslateKorean)) : "특성 없음";
+        _traitsText.text = data.Traits.Count > 0? string.Join("\n", data.Traits.ConvertAll(TextUtil.TranslateKorean)) : "특성 없음";
     }
     private void SetGauge(GameObject[] boxes, int value)
     {
@@ -79,6 +79,8 @@ public class CharacterGenerateUI : MonoBehaviour
 
         _nameInputPage.SetActive(false);
         _characterStatPage.SetActive(false);
+
+        GameManager.Instance.StartFirstTurn();
     }
 
     

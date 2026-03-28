@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class TurnManager : Singleton<TurnManager>
 {
-    [SerializeField] private BigTurnUIController _bigTurnUI;
+    [SerializeField] private BigTurnUIController _bTUIController;
     [SerializeField] private int _smallTurnsPerBigTurn = 5;
     [SerializeField] private float _smallTurnInterval = 0.3f;
 
@@ -48,7 +48,7 @@ public class TurnManager : Singleton<TurnManager>
     private IEnumerator OpenBigTurnUIAndWait()
     {
         _isWaitingSelection = true;
-        _bigTurnUI.Open(CurrentBigTurn, _currentSelection);
+        _bTUIController.Open(CurrentBigTurn, _currentSelection);
         yield return new WaitUntil(() => _isWaitingSelection == false);
     }
 
@@ -68,7 +68,7 @@ public class TurnManager : Singleton<TurnManager>
             $"Policy:{selection.Policy}, Weather:{selection.Weather}, Event:{selection.EventType}, Expand:{selection.ExpandTerritory}"
         );
 
-        _bigTurnUI.Close();
+        _bTUIController.Close();
         _isWaitingSelection = false;
 
     }
