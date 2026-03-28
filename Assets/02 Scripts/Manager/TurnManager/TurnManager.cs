@@ -1,6 +1,7 @@
-// TurnManager.cs
 using System.Collections;
 using UnityEngine;
+using System.Collections.Generic;
+
 
 public class TurnManager : Singleton<TurnManager>
 {
@@ -47,7 +48,7 @@ public class TurnManager : Singleton<TurnManager>
             for (int i = 0; i < _smallTurnsPerBigTurn; i++)
             {
                 CurrentSmallTurn = i + 1;
-                RunOneSmallTurn();
+                yield return StartCoroutine(RunOneSmallTurn());
                 yield return new WaitForSeconds(_smallTurnInterval);
             }
             _smallTurnLogController.ClearLogs();
@@ -62,18 +63,37 @@ public class TurnManager : Singleton<TurnManager>
         yield return new WaitUntil(() => _isWaitingSelection == false);
     }
 
-    private void RunOneSmallTurn()
-
+    private IEnumerator RunOneSmallTurn()
     {
+        List<Transform> activeTiles = CollectActiveTiles();
+        if (activeTiles.Count == 0) yield break;
+
         for (int i = 0; i < CharacterManager.Instance.ActiveCharacters.Count; i++)
         {
-                CharacterEntity character = CharacterManager.Instance.ActiveCharacters[i];
-                string logLine = character.RunSmallTurn(_currentSelection, CurrentBigTurn, CurrentSmallTurn);
-                _smallTurnLogController.AddLog(logLine);
+            CharacterEntity character = CharacterManager.Instance.ActiveCharacters[i];
+            yield return StartCoroutine(
+                character.RunSmallTurn(_currentSelection, CurrentBigTurn, CurrentSmallTurn, activeTiles, _smallTurnLogController)
+            );
         }
-        
-    }
 
+    }
+    private List<Transform> CollectActiveTiles()
+    {
+        List<Transform> tiles = new List<Transform>();
+
+        for (int i = 0; i < GameManager.Instance.ActiveStages.Count; i++)
+        {
+            StageContext stage = GameManager.Instance.ActiveStages[i];
+            Transform[] stageTiles = stage.Tiles;
+
+            for (int j = 0; j < stageTiles.Length; j++)
+            {
+                tiles.Add(stageTiles[j]);
+            }
+        }
+
+        return tiles;
+    }
     public void ApplyBigTurnSelection(BigTurnSelectionData selection)
     {
         _currentSelection = selection;

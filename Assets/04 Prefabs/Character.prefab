@@ -55,6 +55,7 @@ MonoBehaviour:
     Health: 100
     Mood: 100
     Traits: 00000000
+  _moveDuration: 0.35
 --- !u!1 &1210877690648096331
 GameObject:
   m_ObjectHideFlags: 0

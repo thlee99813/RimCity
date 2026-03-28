@@ -13,7 +13,11 @@ public class StageManager : Singleton<StageManager>
         base.Awake();
 
         SetAllStages(false);
+    }
+    void Start()
+    {
         SetStageActive(0, true);
+
     }
 
     

@@ -1,7 +1,7 @@
 using UnityEngine;
 using System.Collections.Generic;
 
-public class CharacterBrain : MonoBehaviour
+public class CharacterBrain
 {
     public SmallTurnActionType DecideSmallTurnAction(CharacterData data, BigTurnSelectionData selection)
     {

@@ -1,12 +1,20 @@
 using UnityEngine;
+using System.Collections;
+using System.Collections.Generic;
+using DG.Tweening;
+
 
 public class CharacterEntity : MonoBehaviour
 {
 
-    //캐릭터의 기본단위이자, Data, Brain, Condition 을 참조하고있음.
 
     public CharacterData Data;
     private CharacterBrain _brain = new CharacterBrain();
+    public Transform CurrentTile { get; private set; }
+
+    [SerializeField] private float _moveDuration = 0.35f;
+
+
 
 
     public void Initialize(CharacterData data)
@@ -23,13 +31,85 @@ public class CharacterEntity : MonoBehaviour
     {
         CharacterManager.Instance.Unregister(this);
     }
-    public string RunSmallTurn(BigTurnSelectionData selection, int bigTurn, int smallTurn)
-    {
-        SmallTurnActionType action = _brain.DecideSmallTurnAction(Data, selection);
-        return TextUtil.ApplyKoreanParticles($"[{smallTurn} 턴] {Data.Name}은/는 {ToActionText(action)}");
+    public IEnumerator RunSmallTurn(BigTurnSelectionData selection, int bigTurn, int smallTurn, List<Transform> activeTiles, SmallTurnLogController logController)
 
-        
+    {
+    SmallTurnActionType action = _brain.DecideSmallTurnAction(Data, selection);
+
+    string logLine = TextUtil.ApplyKoreanParticles($"[{smallTurn} 턴] {Data.Name}은/는 {ToActionText(action)}");
+    logController.AddLog(logLine);
+
+    if (activeTiles == null || activeTiles.Count == 0)
+        yield break;
+
+    if (CurrentTile == null)
+        SetCurrentTile(GetNearestTile(activeTiles, transform.position));
+
+    if (action == SmallTurnActionType.Wander || action == SmallTurnActionType.Gather)
+    {
+        Transform nextTile = GetRandomNeighborTile(activeTiles, CurrentTile);
+        if (nextTile != null)
+            yield return MoveToTile(nextTile);
     }
+}
+
+    private IEnumerator MoveToTile(Transform targetTile)
+    {
+        Vector3 target = new Vector3(targetTile.position.x, transform.position.y, targetTile.position.z);
+        Tween tween = transform.DOMove(target, _moveDuration).SetEase(Ease.Linear);
+        yield return tween.WaitForCompletion();
+        CurrentTile = targetTile;
+    }
+    
+    private Transform GetNearestTile(List<Transform> tiles, Vector3 worldPosition)
+    {
+        Transform best = null;
+        float bestSqr = float.MaxValue;
+
+        for (int i = 0; i < tiles.Count; i++)
+        {
+            float sqr = (tiles[i].position - worldPosition).sqrMagnitude;
+            if (sqr < bestSqr)
+            {
+                bestSqr = sqr;
+                best = tiles[i];
+            }
+        }
+
+        return best;
+    }
+    private Transform GetRandomNeighborTile(List<Transform> tiles, Transform currentTile)
+    {
+        if (currentTile == null) return null;
+
+        List<Transform> neighbors = new List<Transform>();
+
+        float minDist = float.MaxValue;
+        for (int i = 0; i < tiles.Count; i++)
+        {
+            if (tiles[i] == currentTile) continue;
+            float d = Vector3.Distance(currentTile.position, tiles[i].position);
+            if (d > 0.01f && d < minDist) minDist = d;
+        }
+
+        if (minDist == float.MaxValue) return currentTile;
+
+        float tolerance = minDist * 0.25f;
+
+        for (int i = 0; i < tiles.Count; i++)
+        {
+            if (tiles[i] == currentTile) continue;
+            float d = Vector3.Distance(currentTile.position, tiles[i].position);
+            if (Mathf.Abs(d - minDist) <= tolerance)
+                neighbors.Add(tiles[i]);
+        }
+
+        if (neighbors.Count == 0) return currentTile;
+        return neighbors[Random.Range(0, neighbors.Count)];
+    }
+
+
+
     private string ToActionText(SmallTurnActionType action) 
     { 
         switch (action)
@@ -45,6 +125,16 @@ public class CharacterEntity : MonoBehaviour
             default: return "무언가를 고민합니다.";
         } 
     }
+
+    private void SetCurrentTile(Transform tile)
+    {
+        CurrentTile = tile;
+        Vector3 pos = transform.position;
+        pos.x = tile.position.x;
+        pos.z = tile.position.z;
+        transform.position = pos;
+    }
+    
 
 
 }
