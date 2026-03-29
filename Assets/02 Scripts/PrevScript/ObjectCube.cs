@@ -27,11 +27,9 @@ public class ObjectCube : MonoBehaviour
 
     [SerializeField] private ObjectType cubeType;
 
-    private bool opendoored = false;
 
 
 
-    private bool istriggered = false;
 
     
 
@@ -49,7 +47,6 @@ public class ObjectCube : MonoBehaviour
     public void ResetCube()
         {
             rootObject.SetActive(true);
-            istriggered = false;
 
         }
 

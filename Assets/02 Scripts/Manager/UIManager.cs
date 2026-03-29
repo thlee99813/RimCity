@@ -34,7 +34,6 @@ public class UIManager : Singleton<UIManager>
     private readonly List<CharacterHeaderSlotUI> _spawnedSlots = new List<CharacterHeaderSlotUI>();
 
 
-    private int _slotCount = 0;
 
     public void SmallTurnStart()
     {

@@ -10,6 +10,8 @@ public class GameManager : Singleton<GameManager>
     
     public CharacterGenerator CharacterGenerator;
     public readonly List<StageContext> ActiveStages = new List<StageContext>();
+    public PlayerResourceInventory PlayerInventory;
+
 
     public void StartFirstTurn()
     {

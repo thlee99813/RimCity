@@ -12,7 +12,7 @@ public class StageManager : Singleton<StageManager>
     {
         base.Awake();
 
-        SetAllStages(false);
+        //SetAllStages(false);
     }
     void Start()
     {

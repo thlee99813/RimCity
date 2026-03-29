@@ -26,6 +26,8 @@ public class MapResourceSpawner : MonoBehaviour
     }
     private void OnDisable()
     {
+        if (EventManager.Instance == null) return;
+
         EventManager.Instance.RemoveListener(MEventType.Stageactivated, this);
     }
     private void OnStageActivated(MEventType eventType, Component sender, System.EventArgs args)
@@ -75,11 +77,17 @@ public class MapResourceSpawner : MonoBehaviour
 
     private void SpawnAtTile(TileNode[] tiles, int tileIndex, ResourceType spawnType)
     {
-        Vector3 spawnPos = tiles[tileIndex].WorldPosition + new Vector3(0f, _yOffset, 0f);
+        TileNode tile = tiles[tileIndex];
+        tile.ClearResource();
+
+        Vector3 spawnPos = tile.WorldPosition + new Vector3(0f, _yOffset, 0f);
         GameObject prefab = GetPrefab(spawnType);
         if (prefab == null) return;
 
-        Instantiate(prefab, spawnPos, Quaternion.identity, tiles[tileIndex].transform);
+        GameObject spawned = Instantiate(prefab, spawnPos, Quaternion.identity, tile.transform);
+        ResourceNode spawnedResourceNode = spawned.GetComponent<ResourceNode>();
+
+        tile.SetResource(spawnType, spawnedResourceNode);
     }
 
     private GameObject GetPrefab(ResourceType spawnType)

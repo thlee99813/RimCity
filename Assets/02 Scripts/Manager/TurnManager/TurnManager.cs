@@ -72,7 +72,7 @@ public class TurnManager : Singleton<TurnManager>
         {
             CharacterEntity character = CharacterManager.Instance.ActiveCharacters[i];
             yield return StartCoroutine(
-                character.RunSmallTurn(_currentSelection, CurrentBigTurn, CurrentSmallTurn, activeNodes, _smallTurnLogController)
+                character.RunSmallTurn(_currentSelection, CurrentSmallTurn, activeNodes, _smallTurnLogController)
             );
         }
     }
@@ -97,10 +97,10 @@ public class TurnManager : Singleton<TurnManager>
         _currentSelection = selection;
 
         // 나중에 정책/날씨/이벤트/확장 실제 적용
-        Debug.Log(
+        /*Debug.Log(
             $"[BigTurn {CurrentBigTurn} 선택 확정] " +
             $"Policy:{selection.Policy}, Weather:{selection.Weather}, Event:{selection.EventType}, Expand:{selection.ExpandTerritory}"
-        );
+        );*/
 
         _bTUIController.Close();
         _isWaitingSelection = false;

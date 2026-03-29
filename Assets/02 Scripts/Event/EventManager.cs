@@ -114,7 +114,6 @@ public class EventManager : Singleton<EventManager>
 
     protected override void Init()
     {
-        Debug.Log("EventManager Init Complete!");
     }
 
     // Unity에서 파괴된 오브젝트/비정상 리스너 판별

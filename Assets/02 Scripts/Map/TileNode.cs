@@ -10,12 +10,20 @@ public class TileNode : MonoBehaviour
 
     [SerializeField] private List<TileNode> _neighbors = new List<TileNode>();
 
+    [Header("Resource")]
+    [SerializeField] private ResourceType _resourceType = ResourceType.None;
+    [SerializeField] private ResourceNode _resourceNode;
+
     public int Index => _index;
     public int GridX => _gridX;
     public int GridZ => _gridZ;
     public string CoordId => _coordId;
     public IReadOnlyList<TileNode> Neighbors => _neighbors;
     public Vector3 WorldPosition => transform.position;
+
+    public ResourceType ResourceTypeOnTile => _resourceType;
+    public ResourceNode ResourceNodeOnTile => _resourceNode;
+    public bool HasResource => _resourceType != ResourceType.None && _resourceNode != null;
 
     public void SetIndex(int index)
     {
@@ -38,5 +46,16 @@ public class TileNode : MonoBehaviour
     {
         if (node == null || node == this || _neighbors.Contains(node)) return;
         _neighbors.Add(node);
+    }
+    public void SetResource(ResourceType type, ResourceNode node)
+    {
+        _resourceType = type;
+        _resourceNode = node;
+    }
+
+    public void ClearResource()
+    {
+        _resourceType = ResourceType.None;
+        _resourceNode = null;
     }
 }
