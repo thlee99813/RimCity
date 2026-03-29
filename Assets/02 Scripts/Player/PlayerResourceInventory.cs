@@ -6,10 +6,13 @@ public class PlayerResourceInventory : MonoBehaviour
     [SerializeField] private int _berry;
     [SerializeField] private int _tree;
     [SerializeField] private int _rock;
+    [SerializeField] private int _fiber;
 
     public int Berry => _berry;
     public int Tree => _tree;
     public int Rock => _rock;
+
+    public int Fiber => _fiber;
 
     public event Action OnChanged;
 
@@ -26,6 +29,8 @@ public class PlayerResourceInventory : MonoBehaviour
             case ResourceType.Berry: _berry += amount; changed = true; break;
             case ResourceType.Tree: _tree += amount; changed = true; break;
             case ResourceType.Rock: _rock += amount; changed = true; break;
+            case ResourceType.Grass: _fiber += amount; changed = true; break;
+
         }
 
         if (changed) OnChanged?.Invoke();
@@ -54,6 +59,11 @@ public class PlayerResourceInventory : MonoBehaviour
             case ResourceType.Rock:
                 if (_rock < amount) return false;
                 _rock -= amount;
+                consumed = true;
+                break;
+            case ResourceType.Grass:
+                if(_fiber < amount) return false;
+                _fiber -= amount;
                 consumed = true;
                 break;
         }

@@ -206,15 +206,17 @@ public class CharacterTaskController
             case ResourceType.Berry: return "산딸기";
             case ResourceType.Tree: return "나무";
             case ResourceType.Rock: return "바위";
+            case ResourceType.Grass: return "섬유";
             default: return "자원";
         }
     }
 
     private ResourceType DecideGatherTargetType()
     {
-        int roll = Random.Range(0, 3);
+        int roll = Random.Range(0, 4);
         if (roll == 0) return ResourceType.Berry;
         if (roll == 1) return ResourceType.Tree;
-        return ResourceType.Rock;
+        if (roll == 2) return ResourceType.Rock;
+        return ResourceType.Grass;
     }
 }

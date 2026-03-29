@@ -9,6 +9,8 @@ public class MapResourceSpawner : MonoBehaviour
     [SerializeField] private GameObject _treePrefab;
     [SerializeField] private GameObject _rockPrefab;
 
+    [SerializeField] private GameObject _grassPrefab;
+
     [Header("부모/위치")]
     [SerializeField] private float _yOffset = 0f;
 
@@ -17,6 +19,8 @@ public class MapResourceSpawner : MonoBehaviour
     [SerializeField] private int _berryWeight = 10;
     [SerializeField] private int _treeWeight = 20;
     [SerializeField] private int _rockWeight = 10;
+
+    [SerializeField] private int _grassWeight = 15;
 
     private readonly int[] _blockedTileNumbers = { 6, 7, 10, 11 };
 
@@ -62,7 +66,7 @@ public class MapResourceSpawner : MonoBehaviour
 
     private ResourceType PickSpawnType()
     {
-        int total = _noneWeight + _berryWeight + _treeWeight + _rockWeight;
+        int total = _noneWeight + _berryWeight + _treeWeight + _rockWeight + _grassWeight;
         int roll = Random.Range(0, total);
 
         if (roll < _noneWeight) return ResourceType.None;
@@ -72,6 +76,8 @@ public class MapResourceSpawner : MonoBehaviour
         roll -= _berryWeight;
 
         if (roll < _treeWeight) return ResourceType.Tree;
+
+        if (roll < _grassWeight) return ResourceType.Grass;
         return ResourceType.Rock;
     }
 
@@ -86,6 +92,8 @@ public class MapResourceSpawner : MonoBehaviour
 
         GameObject spawned = Instantiate(prefab, spawnPos, Quaternion.identity, tile.transform);
         ResourceNode spawnedResourceNode = spawned.GetComponent<ResourceNode>();
+        if (spawnedResourceNode != null)
+        spawnedResourceNode.Type = spawnType;
 
         tile.SetResource(spawnType, spawnedResourceNode);
     }
@@ -97,6 +105,7 @@ public class MapResourceSpawner : MonoBehaviour
             case ResourceType.Berry: return _berryPrefab;
             case ResourceType.Tree: return _treePrefab;
             case ResourceType.Rock: return _rockPrefab;
+            case ResourceType.Grass: return _grassPrefab;
             default: return null;
         }
     }

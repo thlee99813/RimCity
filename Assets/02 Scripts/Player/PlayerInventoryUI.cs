@@ -6,6 +6,8 @@ public class PlayerInventoryUI : MonoBehaviour
     [SerializeField] private TMP_Text _berryText;
     [SerializeField] private TMP_Text _treeText;
     [SerializeField] private TMP_Text _rockText;
+    [SerializeField] private TMP_Text _fiberText;
+
 
     private PlayerResourceInventory _inventory;
 
@@ -26,5 +28,6 @@ public class PlayerInventoryUI : MonoBehaviour
         _berryText.text = _inventory.Berry.ToString();
         _treeText.text = _inventory.Tree.ToString();
         _rockText.text = _inventory.Rock.ToString();
+        _fiberText.text = _inventory.Fiber.ToString();
     }
 }
