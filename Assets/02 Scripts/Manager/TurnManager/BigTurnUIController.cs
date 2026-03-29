@@ -120,9 +120,7 @@ public class BigTurnUIController : MonoBehaviour
             { WeatherType.Hot, 20 },
             { WeatherType.Cold, 20 },
             { WeatherType.Drought, 10 },
-            { WeatherType.Flood, 7 },
             { WeatherType.Heatwave, 4 },
-            { WeatherType.Snowstorm, 3 },
             { WeatherType.ExtremeCold, 1 }
         };
 

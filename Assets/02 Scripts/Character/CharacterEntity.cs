@@ -83,7 +83,11 @@ public class CharacterEntity : MonoBehaviour
         SmallTurnLogController logController)
     {
 
-        _needsController.Tick(Status, Data);
+        _needsController.Tick(Status, Data, selection.Weather);
+        if (Status.Hunger <= 0f)
+        {
+            logController.AddLog(TextUtil.ApplyKoreanParticles( $"[{smallTurn} 턴] {Data.Name}은/는 배고파서 체력이 줄고 있습니다.({_healthDeltaWhenStarving})"));
+        }
         if (_lifeController.TryHandleDeath(this, smallTurn, logController)) yield break;
 
         if (activeNodes == null || activeNodes.Count == 0) yield break;

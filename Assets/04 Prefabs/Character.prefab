@@ -96,6 +96,13 @@ MonoBehaviour:
       Amount: 4
     - Type: 3
       Amount: 2
+  - Id: coldStone
+    DisplayName: "\uBC1C\uD55C\uC11D"
+    Prefab: {fileID: 2839181273327871567, guid: 34f2439c7547e0a42a866e50384b6ddb, type: 3}
+    BuildTurns: 3
+    Costs:
+    - Type: 3
+      Amount: 12
 --- !u!1 &1210877690648096331
 GameObject:
   m_ObjectHideFlags: 0

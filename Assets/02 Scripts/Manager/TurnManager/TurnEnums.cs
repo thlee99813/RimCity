@@ -14,8 +14,6 @@ public enum WeatherType
     Cold,
     Heatwave,
     Drought,
-    Flood,
-    Snowstorm,
     ExtremeCold
 }
 

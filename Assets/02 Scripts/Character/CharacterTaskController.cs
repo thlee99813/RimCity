@@ -129,7 +129,7 @@ public class CharacterTaskController
             _forcedAction = SmallTurnActionType.Build;
         }
 
-        if (_buildTargetTile == null || _buildTargetTile.IsOccupied)
+        if (_buildTargetTile == null || _buildTargetTile.IsOccupied || _buildTargetTile.HasResource)
         {
             ClearForcedBuild();
             yield break;
@@ -337,6 +337,8 @@ public class CharacterTaskController
             TileNode node = activeNodes[i];
             if (node == null) continue;
             if (node.IsOccupied) continue;
+            if (node.HasResource) continue;
+
 
             float d = (node.WorldPosition - from.WorldPosition).sqrMagnitude;
             if (d < bestDist)

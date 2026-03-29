@@ -48,8 +48,9 @@ public static class TextUtil
             WeatherType.Cold => "약한 추위가 발생합니다",
             WeatherType.Heatwave => "폭염이 내리쬡니다",
             WeatherType.Drought => "가뭄이 발생합니다",
-            WeatherType.Flood => "홍수가 발생합니다",
-            WeatherType.Snowstorm => "폭설이 내립니다",
+            //WeatherType.Storm => "폭풍이 건물을 파괴합니다",
+            //eatherType.Flood => "홍수가 발생합니다",
+            //WeatherType.Snowstorm => "폭설이 내립니다",
             WeatherType.ExtremeCold => "혹한이 다가옵니다",
             _ => weather.ToString()
         };

@@ -52,6 +52,14 @@ public class TurnManager : Singleton<TurnManager>
             }
 
             UIManager.Instance.SmallTurnStart();
+            float weatherHealthDelta = GetWeatherHealthDelta(_currentSelection.Weather);
+            if (weatherHealthDelta < 0f)
+            {
+                _smallTurnLogController.AddLog(
+                    $"{TextUtil.TranslateKorean(_currentSelection.Weather)} 효과로 매턴 ({weatherHealthDelta}) 만큼 체력이 줄고 있습니다."
+                );
+                yield return new WaitForSeconds(_expandTransitionDelay);
+            }
 
             for (int i = 0; i < _smallTurnsPerBigTurn; i++)
             {
@@ -121,5 +129,18 @@ public class TurnManager : Singleton<TurnManager>
         _bTUIController.Close();
         _isWaitingSelection = false;
 
+    }
+    private float GetWeatherHealthDelta(WeatherType weather)
+    {
+        switch (weather)
+        {
+            case WeatherType.Mild: return 0f;
+            case WeatherType.Hot: return -2f;
+            case WeatherType.Cold: return -2f;
+            case WeatherType.Heatwave: return -4f;
+            case WeatherType.Drought: return -2f;
+            case WeatherType.ExtremeCold: return -4f;
+            default: return 0f;
+        }
     }
 }

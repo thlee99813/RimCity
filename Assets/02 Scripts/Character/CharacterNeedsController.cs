@@ -13,9 +13,35 @@ public class CharacterNeedsController
         _healthDeltaWhenStarving = healthDeltaWhenStarving;
     }  
 
-    public void Tick(CharacterStatus status, CharacterData data)
+    public void Tick(CharacterStatus status, CharacterData data, WeatherType weather)
     {
         status.TickNeeds(_hungerDeltaPerTurn, _sleepDeltaPerTurn, _funDeltaPerTurn, data);
+        float weatherHealthDelta = 0f;
+
+        switch (weather)
+        {
+            case WeatherType.Mild:
+                weatherHealthDelta = 0f;
+                break;
+            case WeatherType.Hot:
+                weatherHealthDelta = -2f;
+                break;
+            case WeatherType.Cold:
+                weatherHealthDelta = -2f;
+                break;
+            case WeatherType.Heatwave:
+                weatherHealthDelta = -4f;
+                break;
+            case WeatherType.Drought:
+                weatherHealthDelta = -2f;
+                status.AddHunger(-2f, data);
+                break;
+            case WeatherType.ExtremeCold:
+                weatherHealthDelta = -4f;
+                break;
+        }
+        if (weatherHealthDelta != 0f)
+            status.AddHealth(weatherHealthDelta, data);
         if (status.Hunger <= 0f)
             status.AddHealth(_healthDeltaWhenStarving, data);
     }
