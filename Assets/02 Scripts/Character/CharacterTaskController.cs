@@ -85,6 +85,8 @@ public class CharacterTaskController
     {
         _gatherTargetResource = null;
         _gatherTargetTile = null;
+        _gatherTargetType = targetType;
+
 
         if (startTile == null) return false;
 
@@ -135,6 +137,7 @@ public class CharacterTaskController
         _forcedAction = SmallTurnActionType.Idle;
         _gatherTargetResource = null;
         _gatherTargetTile = null;
+        _gatherTargetType = ResourceType.None;
     }
 
     private List<TileNode> FindPath(TileNode start, TileNode goal, List<TileNode> activeNodes)
@@ -183,6 +186,19 @@ public class CharacterTaskController
         path.Reverse();
         return path;
     }
+    public void RunEatAction(CharacterEntity owner, int smallTurn, SmallTurnLogController logController, float berryHungerRecoverAmount)
+    {
+        bool consumed = GameManager.Instance.PlayerInventory.Consume(ResourceType.Berry, 1);
+        if (!consumed)
+        {
+            logController.AddLog(TextUtil.ApplyKoreanParticles($"[{smallTurn} 턴] {owner.Data.Name}은/는 먹을 산딸기가 없습니다."));
+            return;
+        }
+
+        owner.Status.AddHunger(berryHungerRecoverAmount, owner.Data);
+        logController.AddLog(TextUtil.ApplyKoreanParticles($"[{smallTurn} 턴] {owner.Data.Name}은/는 산딸기를 먹고 허기를 회복합니다."));
+    }
+
     private string ResourceKorean(ResourceType t)
     {
         switch (t)

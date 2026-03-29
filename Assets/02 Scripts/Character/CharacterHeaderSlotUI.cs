@@ -2,10 +2,12 @@ using TMPro;
 using UnityEngine;
 public class CharacterHeaderSlotUI : MonoBehaviour
 {
-    [SerializeField] private TMP_Text _nameText;
+    public TMP_Text NameText;
+    public string CharacterId { get; private set; }
 
-    public void SetName(string characterName)
+    public void SetData(string characterId, string characterName)
     {
-        _nameText.text = characterName;
+        CharacterId = characterId;
+        NameText.text = characterName;
     }
 }

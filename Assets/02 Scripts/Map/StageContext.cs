@@ -12,7 +12,6 @@ public class StageContext : MonoBehaviour
 
     private void OnEnable()
     {
-        if (GameManager.Instance == null) return;
         GameManager.Instance.StageActive(this);
     }
 

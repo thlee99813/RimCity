@@ -37,6 +37,7 @@ public class TurnManager : Singleton<TurnManager>
 
     private IEnumerator TurnLoop()
     {
+
         while (true)
         {
             UIManager.Instance.SmallTurnEnd();
@@ -47,6 +48,7 @@ public class TurnManager : Singleton<TurnManager>
 
             for (int i = 0; i < _smallTurnsPerBigTurn; i++)
             {
+
                 CurrentSmallTurn = i + 1;
                 yield return StartCoroutine(RunOneSmallTurn());
                 yield return new WaitForSeconds(_smallTurnInterval);

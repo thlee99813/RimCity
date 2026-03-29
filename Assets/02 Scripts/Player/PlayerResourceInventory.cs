@@ -43,19 +43,19 @@ public class PlayerResourceInventory : MonoBehaviour
                 if (_berry < amount) return false;
                 _berry -= amount;
                 consumed = true;
-                return true;
+                break;
 
             case ResourceType.Tree:
                 if (_tree < amount) return false;
                 _tree -= amount;
                 consumed = true;
-                return true;
+                break;
 
             case ResourceType.Rock:
                 if (_rock < amount) return false;
                 _rock -= amount;
                 consumed = true;
-                return true;
+                break;
         }
 
         if (consumed) OnChanged?.Invoke();

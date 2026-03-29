@@ -19,7 +19,11 @@ public class CharacterGenerator : MonoBehaviour
     }
     public CharacterData RerollCharacterData(CharacterEntity target, string characterName)
     {
+        string fixedId = target.Data != null ? target.Data.Id : Guid.NewGuid().ToString("N");
+
         CharacterData data = CreateRandomCharacter(characterName);
+        data.Id = fixedId;
+
         target.Initialize(data);
         return data;
     }
