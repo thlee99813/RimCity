@@ -76,8 +76,11 @@ public class MapResourceSpawner : MonoBehaviour
         roll -= _berryWeight;
 
         if (roll < _treeWeight) return ResourceType.Tree;
+        roll -= _treeWeight;
 
         if (roll < _grassWeight) return ResourceType.Grass;
+        roll -= _grassWeight;
+
         return ResourceType.Rock;
     }
 

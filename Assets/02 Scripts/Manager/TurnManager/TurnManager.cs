@@ -13,7 +13,8 @@ public class TurnManager : Singleton<TurnManager>
     [SerializeField] private int _smallTurnsPerBigTurn = 5;
     [SerializeField] private float _smallTurnInterval = 1f;
     
-
+    [SerializeField] private float _expandTransitionDelay = 1f;
+    private bool _waitExpandTransitionThisTurn;
 
     public int CurrentBigTurn { get; private set; }
     public int CurrentSmallTurn { get; private set; }
@@ -43,6 +44,12 @@ public class TurnManager : Singleton<TurnManager>
             UIManager.Instance.SmallTurnEnd();
 
             yield return StartCoroutine(OpenBigTurnUIAndWait());
+
+            if (_waitExpandTransitionThisTurn)
+            {
+                _waitExpandTransitionThisTurn = false;
+                yield return new WaitForSeconds(_expandTransitionDelay);
+            }
 
             UIManager.Instance.SmallTurnStart();
 
@@ -97,6 +104,13 @@ public class TurnManager : Singleton<TurnManager>
     public void ApplyBigTurnSelection(BigTurnSelectionData selection)
     {
         _currentSelection = selection;
+
+        if (selection.ExpandTerritory)
+        {
+            bool expanded = StageManager.Instance.ExpandOneStep();
+            if (expanded)
+                _waitExpandTransitionThisTurn = true;
+        }
 
         // 나중에 정책/날씨/이벤트/확장 실제 적용
         /*Debug.Log(
