@@ -46,7 +46,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ResourceNode
   Type: 2
-  Amount: 10
+  Amount: 3
 --- !u!1 &2986607542141124001
 GameObject:
   m_ObjectHideFlags: 0

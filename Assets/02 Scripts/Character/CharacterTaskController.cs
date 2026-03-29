@@ -12,6 +12,9 @@ public class CharacterTaskController
 
     private readonly int _maxMoveTilesPerTurn;
 
+    private ResourceType _gatherTargetType = ResourceType.None;
+
+
     public CharacterTaskController(int maxMoveTilesPerTurn)
     {
         _maxMoveTilesPerTurn = Mathf.Max(1, maxMoveTilesPerTurn);
@@ -31,10 +34,11 @@ public class CharacterTaskController
     {
         if (!_isForcedAction)
         {
-            bool found = TryAcquireGatherTarget(owner.CurrentTileNode, activeNodes);
+            ResourceType targetType = DecideGatherTargetType();
+            bool found = TryAcquireGatherTarget(owner.CurrentTileNode, activeNodes, targetType);
             if (!found)
             {
-                logController.AddLog(TextUtil.ApplyKoreanParticles($"[{smallTurn} 턴] {owner.Data.Name}은/는 수집할 산딸기를 찾지 못합니다."));
+                logController.AddLog(TextUtil.ApplyKoreanParticles($"[{smallTurn} 턴] {owner.Data.Name}은/는 수집할 {ResourceKorean(_gatherTargetType)}를 찾지 못합니다."));
                 yield break;
             }
 
@@ -51,10 +55,11 @@ public class CharacterTaskController
 
         if (owner.CurrentTileNode == _gatherTargetTile)
         {
-            _gatherTargetResource.Amount = Mathf.Max(0, _gatherTargetResource.Amount - 1);
-            GameManager.Instance.PlayerInventory.Add(ResourceType.Berry, 3);
+            _gatherTargetResource.Consume(1);
+            GameManager.Instance.PlayerInventory.Add(_gatherTargetType, 3);
 
-            logController.AddLog(TextUtil.ApplyKoreanParticles($"[{smallTurn} 턴] {owner.Data.Name}은/는 산딸기를 수집합니다."));
+
+            logController.AddLog(TextUtil.ApplyKoreanParticles($"[{smallTurn} 턴] {owner.Data.Name}은/는 {ResourceKorean(_gatherTargetType)}를 수집합니다."));
             ClearForcedGather();
             yield break;
         }
@@ -63,12 +68,12 @@ public class CharacterTaskController
         if (path == null || path.Count == 0)
         {
             ClearForcedGather();
-            logController.AddLog(TextUtil.ApplyKoreanParticles($"[{smallTurn} 턴] {owner.Data.Name}은/는 산딸기까지 가는 길을 찾지 못합니다."));
+            logController.AddLog(TextUtil.ApplyKoreanParticles($"[{smallTurn} 턴] {owner.Data.Name}은/는 {ResourceKorean(_gatherTargetType)}까지 가는 길을 찾지 못합니다."));
             yield break;
         }
 
         int moveCount = Mathf.Min(_maxMoveTilesPerTurn, path.Count);
-        logController.AddLog(TextUtil.ApplyKoreanParticles($"[{smallTurn} 턴] {owner.Data.Name}은/는 산딸기를 수집하러 이동합니다. ({moveCount}칸 이동)"));
+        logController.AddLog(TextUtil.ApplyKoreanParticles($"[{smallTurn} 턴] {owner.Data.Name}은/는 {ResourceKorean(_gatherTargetType)}를 수집하러 이동합니다. ({moveCount}칸 이동)"));
 
         for (int i = 0; i < moveCount; i++)
         {
@@ -76,7 +81,7 @@ public class CharacterTaskController
         }
     }
 
-    private bool TryAcquireGatherTarget(TileNode startTile, List<TileNode> activeNodes)
+    private bool TryAcquireGatherTarget(TileNode startTile, List<TileNode> activeNodes,ResourceType targetType)
     {
         _gatherTargetResource = null;
         _gatherTargetTile = null;
@@ -89,7 +94,8 @@ public class CharacterTaskController
         {
             TileNode tile = activeNodes[i];
 
-            if (tile.ResourceTypeOnTile != ResourceType.Berry) continue;
+            if (tile.ResourceTypeOnTile != targetType) continue;
+            _gatherTargetType = targetType;
 
             ResourceNode resource = tile.ResourceNodeOnTile;
             if (resource == null) continue;
@@ -115,10 +121,11 @@ public class CharacterTaskController
     {
         if (_gatherTargetTile == null || _gatherTargetResource == null) return false;
         if (!activeNodes.Contains(_gatherTargetTile)) return false;
-        if (_gatherTargetTile.ResourceTypeOnTile != ResourceType.Berry) return false;
+        if (_gatherTargetTile.ResourceTypeOnTile != _gatherTargetType) return false;
         if (_gatherTargetTile.ResourceNodeOnTile != _gatherTargetResource) return false;
         if (!_gatherTargetResource.gameObject.activeInHierarchy) return false;
         if (_gatherTargetResource.Amount <= 0) return false;
+
         return true;
     }
 
@@ -175,5 +182,23 @@ public class CharacterTaskController
 
         path.Reverse();
         return path;
+    }
+    private string ResourceKorean(ResourceType t)
+    {
+        switch (t)
+        {
+            case ResourceType.Berry: return "산딸기";
+            case ResourceType.Tree: return "나무";
+            case ResourceType.Rock: return "바위";
+            default: return "자원";
+        }
+    }
+
+    private ResourceType DecideGatherTargetType()
+    {
+        int roll = Random.Range(0, 3);
+        if (roll == 0) return ResourceType.Berry;
+        if (roll == 1) return ResourceType.Tree;
+        return ResourceType.Rock;
     }
 }
