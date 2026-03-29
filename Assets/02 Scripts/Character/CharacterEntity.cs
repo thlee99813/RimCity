@@ -11,8 +11,24 @@ public class CharacterEntity : MonoBehaviour
     public CharacterData Data;
     private CharacterBrain _brain = new CharacterBrain();
     public TileNode CurrentTileNode;
+
+    public bool IsDead { get; private set; }
+
+    [Header("매턴 움직임")]
     [SerializeField] private float _moveDuration = 0.35f;
     [SerializeField] private int _maxMoveTilesPerTurn = 4;
+
+    [Header("매턴 배고픔,수면,재미 감소수치")]
+    [SerializeField] private float _hungerDeltaPerTurn = -3f;
+    [SerializeField] private float _sleepDeltaPerTurn = -2f;
+    [SerializeField] private float _funDeltaPerTurn = -4f;
+
+    [Header("아이템 수치")]
+    [SerializeField] private float _berryHungerRecoverAmount = 20f;
+
+    
+    [field : SerializeField] public CharacterStatus Status { get; private set; } = new CharacterStatus();
+
 
     private CharacterTaskController _taskController;
 
@@ -25,6 +41,7 @@ public class CharacterEntity : MonoBehaviour
     public void Initialize(CharacterData data)
     {
         Data = data; 
+        Status.InitializeFromData(data);
     }
 
     private void OnEnable()
@@ -43,6 +60,10 @@ public class CharacterEntity : MonoBehaviour
     List<TileNode> activeNodes,
     SmallTurnLogController logController)
     {
+
+        Status.TickNeeds(_hungerDeltaPerTurn, _sleepDeltaPerTurn, _funDeltaPerTurn, Data);
+        if (TryHandleDeath(smallTurn, logController)) yield break;
+
         if (activeNodes == null || activeNodes.Count == 0) yield break;
 
         if (CurrentTileNode == null)
@@ -64,6 +85,11 @@ public class CharacterEntity : MonoBehaviour
             TileNode nextNode = GetRandomNeighborNode(CurrentTileNode, activeNodes);
             if (nextNode != null)
                 yield return MoveToTile(nextNode);
+        }
+        if (action == SmallTurnActionType.Eat)
+        {
+            RunEatAction(smallTurn, logController);
+            yield break;
         }
     }
     private void SetCurrentTileNode(TileNode node)
@@ -134,6 +160,29 @@ public class CharacterEntity : MonoBehaviour
             case SmallTurnActionType.Eat: return "음식을 찾아 먹습니다.";
             default: return "무언가를 고민합니다.";
         } 
+    }
+
+    private bool TryHandleDeath(int smallTurn, SmallTurnLogController logController)
+    {
+        if (IsDead) return true;
+        if (Status.Health > 0f) return false;
+
+        IsDead = true;
+        logController.AddLog(TextUtil.ApplyKoreanParticles($"[{smallTurn} 턴] {Data.Name}은/는 죽었습니다."));
+        Destroy(gameObject);
+        return true;
+    }
+    private void RunEatAction(int smallTurn, SmallTurnLogController logController)
+    {
+        bool consumed = GameManager.Instance.PlayerInventory.Consume(ResourceType.Berry, 1);
+        if (!consumed)
+        {
+            logController.AddLog(TextUtil.ApplyKoreanParticles($"[{smallTurn} 턴] {Data.Name}은/는 먹을 산딸기가 없습니다."));
+            return;
+        }
+
+        Status.AddHunger(_berryHungerRecoverAmount, Data);
+        logController.AddLog(TextUtil.ApplyKoreanParticles($"[{smallTurn} 턴] {Data.Name}은/는 산딸기를 먹고 허기를 회복합니다."));
     }
 
 

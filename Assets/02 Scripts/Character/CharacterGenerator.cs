@@ -25,14 +25,16 @@ public class CharacterGenerator : MonoBehaviour
     }
    private CharacterData CreateRandomCharacter(string name)
     {
+        int age = UnityEngine.Random.Range(10, 51);
+
         CharacterData data = new CharacterData
         {
             Id = Guid.NewGuid().ToString("N"),
             Name = string.IsNullOrWhiteSpace(name) ? "무명" : name,
             Gender = UnityEngine.Random.value < 0.5f ? Gender.Male : Gender.Female,
-            Age = UnityEngine.Random.Range(18, 51),
-            Health = 100f,
-            Mood = 100f
+            Age = age,
+            MaxHealth = CalculateMaxHealthByAge(age),
+            MaxMood = 100f
         };
 
         data.Stats[StatType.Combat] = UnityEngine.Random.Range(0, 6);
@@ -41,9 +43,7 @@ public class CharacterGenerator : MonoBehaviour
         data.Stats[StatType.Gather] = UnityEngine.Random.Range(0, 6);
         data.Stats[StatType.Social] = UnityEngine.Random.Range(0, 6);
 
-        data.Needs[NeedType.Hunger] = UnityEngine.Random.Range(40f, 101f);
-        data.Needs[NeedType.Sleep] = UnityEngine.Random.Range(40f, 101f);
-        data.Needs[NeedType.Fun] = UnityEngine.Random.Range(40f, 101f);
+        
 
         Array allTraits = Enum.GetValues(typeof(TraitType));
         int traitCount = UnityEngine.Random.Range(0, 3);
@@ -54,5 +54,21 @@ public class CharacterGenerator : MonoBehaviour
         }
 
         return data;
+    }
+
+    private float CalculateMaxHealthByAge(int age)
+    {
+        age = Mathf.Clamp(age, 0, 100);
+
+        // 0살 50 -> 35살 : 100
+        if (age <= 35)
+        {
+            float t = age / 35f;
+            return Mathf.Lerp(50f, 100f, t);
+        }
+
+        // 35살 : 100 -> 100살 : 10
+        float t2 = (age - 35f) / 65f;
+        return Mathf.Lerp(100f, 10f, t2);
     }
 }
