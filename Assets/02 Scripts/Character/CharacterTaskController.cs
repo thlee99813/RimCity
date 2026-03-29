@@ -13,11 +13,19 @@ public class CharacterTaskController
     private readonly int _maxMoveTilesPerTurn;
 
     private ResourceType _gatherTargetType = ResourceType.None;
+    private readonly BuildRecipe[] _buildRecipes;
+
+    private BuildRecipe _buildRecipe;
+    private TileNode _buildTargetTile;
+    private int _buildTurnsRemaining;
 
 
-    public CharacterTaskController(int maxMoveTilesPerTurn)
+
+    public CharacterTaskController(int maxMoveTilesPerTurn, BuildRecipe[] buildRecipes)
     {
         _maxMoveTilesPerTurn = Mathf.Max(1, maxMoveTilesPerTurn);
+        _buildRecipes = buildRecipes;
+
     }
 
     public SmallTurnActionType ResolveAction(CharacterData data, BigTurnSelectionData selection, CharacterBrain brain)
@@ -79,6 +87,87 @@ public class CharacterTaskController
         {
             yield return owner.MoveToTile(path[i]);
         }
+    }
+    public IEnumerator RunBuildTurn(
+    CharacterEntity owner,
+    int smallTurn,
+    List<TileNode> activeNodes,
+    SmallTurnLogController logController)
+    {
+        if (!_isForcedAction)
+        {
+            if (_buildRecipes == null || _buildRecipes.Length == 0)
+            {
+                logController.AddLog($"[{smallTurn} 턴] 건축 레시피가 없습니다.");
+                yield break;
+            }
+
+            _buildRecipe = DecideBuildRecipe();
+            if (_buildRecipe == null || _buildRecipe.Prefab == null)
+            {
+                logController.AddLog($"[{smallTurn} 턴] 건축 레시피가 잘못되었습니다.");
+                yield break;
+            }
+
+            if (!CanAfford(GameManager.Instance.PlayerInventory, _buildRecipe.Costs))
+            {
+                logController.AddLog($"[{smallTurn} 턴] {owner.Data.Name}은/는 재료가 부족해 {_buildRecipe.DisplayName} 건축을 시작하지 못합니다.");
+                yield break;
+            }
+
+            _buildTargetTile = FindNearestBuildableTile(owner.CurrentTileNode, activeNodes);
+            if (_buildTargetTile == null)
+            {
+                logController.AddLog($"[{smallTurn} 턴] {owner.Data.Name}은/는 건축 가능한 타일을 찾지 못합니다.");
+                yield break;
+            }
+
+            ConsumeCosts(GameManager.Instance.PlayerInventory, _buildRecipe.Costs);
+            _buildTurnsRemaining = Mathf.Max(1, _buildRecipe.BuildTurns);
+
+            _isForcedAction = true;
+            _forcedAction = SmallTurnActionType.Build;
+        }
+
+        if (_buildTargetTile == null || _buildTargetTile.IsOccupied)
+        {
+            ClearForcedBuild();
+            yield break;
+        }
+
+        if (owner.CurrentTileNode != _buildTargetTile)
+        {
+            List<TileNode> path = FindPath(owner.CurrentTileNode, _buildTargetTile, activeNodes);
+            if (path == null || path.Count == 0)
+            {
+                ClearForcedBuild();
+                logController.AddLog($"[{smallTurn} 턴] {owner.Data.Name}은/는 건축 위치로 이동하지 못합니다.");
+                yield break;
+            }
+
+            int moveCount = Mathf.Min(_maxMoveTilesPerTurn, path.Count);
+            logController.AddLog($"[{smallTurn} 턴] {owner.Data.Name}은/는 {_buildRecipe.DisplayName} 건축 위치로 이동합니다. ({moveCount}칸)");
+
+            for (int i = 0; i < moveCount; i++)
+                yield return owner.MoveToTile(path[i]);
+
+            yield break;
+        }
+
+        _buildTurnsRemaining--;
+        if (_buildTurnsRemaining > 0)
+        {
+            logController.AddLog($"[{smallTurn} 턴] {owner.Data.Name}은/는 {_buildRecipe.DisplayName} 건축 중입니다. ({_buildTurnsRemaining}턴 남음)");
+            yield break;
+        }
+
+        GameObject built = Object.Instantiate(_buildRecipe.Prefab, _buildTargetTile.transform);
+        built.transform.localPosition = Vector3.zero;
+        built.transform.localRotation = Quaternion.identity;
+        _buildTargetTile.SetStructure(built);
+
+        logController.AddLog($"[{smallTurn} 턴] {owner.Data.Name}은/는 {_buildRecipe.DisplayName} 건축을 완료했습니다.");
+        ClearForcedBuild();
     }
 
     private bool TryAcquireGatherTarget(TileNode startTile, List<TileNode> activeNodes,ResourceType targetType)
@@ -218,5 +307,54 @@ public class CharacterTaskController
         if (roll == 1) return ResourceType.Tree;
         if (roll == 2) return ResourceType.Rock;
         return ResourceType.Grass;
+    }
+
+    private BuildRecipe DecideBuildRecipe()
+    {
+        return _buildRecipes[Random.Range(0, _buildRecipes.Length)];
+    }
+
+    private bool CanAfford(PlayerResourceInventory inv, ResourceCost[] costs)
+    {
+        for (int i = 0; i < costs.Length; i++)
+            if (inv.GetAmount(costs[i].Type) < costs[i].Amount) return false;
+        return true;
+    }
+
+    private void ConsumeCosts(PlayerResourceInventory inv, ResourceCost[] costs)
+    {
+        for (int i = 0; i < costs.Length; i++)
+            inv.Consume(costs[i].Type, costs[i].Amount);
+    }
+
+    private TileNode FindNearestBuildableTile(TileNode from, List<TileNode> activeNodes)
+    {
+        TileNode best = null;
+        float bestDist = float.MaxValue;
+
+        for (int i = 0; i < activeNodes.Count; i++)
+        {
+            TileNode node = activeNodes[i];
+            if (node == null) continue;
+            if (node.IsOccupied) continue;
+
+            float d = (node.WorldPosition - from.WorldPosition).sqrMagnitude;
+            if (d < bestDist)
+            {
+                bestDist = d;
+                best = node;
+            }
+        }
+
+        return best;
+    }
+
+    private void ClearForcedBuild()
+    {
+        _isForcedAction = false;
+        _forcedAction = SmallTurnActionType.Idle;
+        _buildRecipe = null;
+        _buildTargetTile = null;
+        _buildTurnsRemaining = 0;
     }
 }

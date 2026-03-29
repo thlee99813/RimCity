@@ -71,4 +71,16 @@ public class PlayerResourceInventory : MonoBehaviour
         if (consumed) OnChanged?.Invoke();
         return consumed;
     }
+
+    public int GetAmount(ResourceType type)
+    {
+        switch (type)
+        {
+            case ResourceType.Berry: return _berry;
+            case ResourceType.Tree: return _tree;
+            case ResourceType.Rock: return _rock;
+            case ResourceType.Grass: return _fiber;
+            default: return 0;
+        }
+    }
 }

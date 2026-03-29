@@ -52,10 +52,50 @@ MonoBehaviour:
     Name: 
     Gender: 0
     Age: 0
-    Health: 100
-    Mood: 100
+    MaxHealth: 100
+    MaxMood: 100
+    MaxHunger: 100
+    MaxSleep: 100
+    MaxFun: 100
     Traits: 00000000
+  <Status>k__BackingField:
+    Health: 0
+    Mood: 0
+    Hunger: 0
+    Sleep: 0
   _moveDuration: 0.35
+  _maxMoveTilesPerTurn: 4
+  _hungerDeltaPerTurn: -3
+  _sleepDeltaPerTurn: -2
+  _funDeltaPerTurn: -4
+  _healthDeltaWhenStarving: -5
+  _berryHungerRecoverAmount: 20
+  _buildRecipes:
+  - Id: torch
+    DisplayName: "\uD683\uBD88"
+    Prefab: {fileID: 9037236019129201986, guid: 3f27c7aad67eb9a49b494eb4a6171e49, type: 3}
+    BuildTurns: 2
+    Costs:
+    - Type: 2
+      Amount: 6
+  - Id: campfire
+    DisplayName: "\uBAA8\uB2E5\uBD88"
+    Prefab: {fileID: 5720200806928582994, guid: 31ac6fcffa0adaf4295599b939f67566, type: 3}
+    BuildTurns: 3
+    Costs:
+    - Type: 2
+      Amount: 6
+    - Type: 3
+      Amount: 6
+  - Id: bed
+    DisplayName: "\uCE68\uB300"
+    Prefab: {fileID: 3681431680438273618, guid: 9d781b74b5e13d5419c6d8eb7ada61f2, type: 3}
+    BuildTurns: 3
+    Costs:
+    - Type: 2
+      Amount: 4
+    - Type: 3
+      Amount: 2
 --- !u!1 &1210877690648096331
 GameObject:
   m_ObjectHideFlags: 0

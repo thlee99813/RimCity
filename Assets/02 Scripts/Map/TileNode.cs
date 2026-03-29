@@ -14,6 +14,10 @@ public class TileNode : MonoBehaviour
     [SerializeField] private ResourceType _resourceType = ResourceType.None;
     [SerializeField] private ResourceNode _resourceNode;
 
+    [SerializeField] private GameObject _placedStructure;
+    public bool IsOccupied => _placedStructure != null;
+    public GameObject PlacedStructure => _placedStructure;
+
     public int Index => _index;
     public int GridX => _gridX;
     public int GridZ => _gridZ;
@@ -57,5 +61,15 @@ public class TileNode : MonoBehaviour
     {
         _resourceType = ResourceType.None;
         _resourceNode = null;
+    }
+
+    public void SetStructure(GameObject structure)
+    {
+        _placedStructure = structure;
+    }
+
+    public void ClearStructure()
+    {
+        _placedStructure = null;
     }
 }

@@ -27,6 +27,10 @@ public class CharacterEntity : MonoBehaviour
     [Header("먹기")]
     [SerializeField] private float _berryHungerRecoverAmount = 20f;
 
+    [Header("건축 레시피")]
+    [SerializeField] private BuildRecipe[] _buildRecipes;
+
+
     private CharacterMover _mover;
     private CharacterNeedsController _needsController;
     private CharacterLifeController _lifeController;
@@ -38,7 +42,7 @@ public class CharacterEntity : MonoBehaviour
         _mover = new CharacterMover(transform, _moveDuration);
         _needsController = new CharacterNeedsController(_hungerDeltaPerTurn, _sleepDeltaPerTurn, _funDeltaPerTurn, _healthDeltaWhenStarving);
         _lifeController = new CharacterLifeController();
-        _taskController = new CharacterTaskController(_maxMoveTilesPerTurn);
+        _taskController = new CharacterTaskController(_maxMoveTilesPerTurn, _buildRecipes);
 
     }
     private void OnEnable()
@@ -110,6 +114,13 @@ public class CharacterEntity : MonoBehaviour
             TileNode nextNode = _mover.GetRandomNeighborNode(CurrentTileNode, activeNodes);
             if (nextNode != null)
                 yield return MoveToTile(nextNode);
+        }
+
+        if (action == SmallTurnActionType.Build)
+        {
+            yield return _taskController.RunBuildTurn(this, smallTurn, activeNodes, logController);
+            if (_lifeController.TryHandleDeath(this, smallTurn, logController)) yield break;
+            yield break;
         }
     }
 
