@@ -63,6 +63,10 @@ MonoBehaviour:
     Mood: 0
     Hunger: 0
     Sleep: 0
+  <Equipment>k__BackingField:
+    _armor: 0
+    _weapon: 0
+    _utility: 0
   _moveDuration: 0.35
   _maxMoveTilesPerTurn: 4
   _hungerDeltaPerTurn: -3
@@ -103,6 +107,45 @@ MonoBehaviour:
     Costs:
     - Type: 3
       Amount: 12
+  _craftRecipes:
+  - Id: cloth
+    DisplayName: "\uC637"
+    CraftTurns: 2
+    Costs:
+    - Type: 4
+      Amount: 4
+  - Id: wooden_spear
+    DisplayName: "\uB098\uBB34\uCC3D"
+    CraftTurns: 1
+    Costs:
+    - Type: 2
+      Amount: 4
+  - Id: stone_spear
+    DisplayName: "\uB3CC\uCC3D"
+    CraftTurns: 2
+    Costs:
+    - Type: 3
+      Amount: 4
+  - Id: fan
+    DisplayName: "\uBD80\uCC44"
+    CraftTurns: 1
+    Costs:
+    - Type: 4
+      Amount: 4
+  - Id: bandage
+    DisplayName: "\uBD95\uB300"
+    CraftTurns: 1
+    Costs:
+    - Type: 4
+      Amount: 2
+  - Id: medkit
+    DisplayName: "\uAD6C\uAE09\uC0C1\uC790"
+    CraftTurns: 1
+    Costs:
+    - Type: 4
+      Amount: 4
+    - Type: 3
+      Amount: 1
 --- !u!1 &1210877690648096331
 GameObject:
   m_ObjectHideFlags: 0

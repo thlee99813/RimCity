@@ -13,7 +13,7 @@ public class CharacterNeedsController
         _healthDeltaWhenStarving = healthDeltaWhenStarving;
     }  
 
-    public void Tick(CharacterStatus status, CharacterData data, WeatherType weather)
+    public void Tick(CharacterStatus status, CharacterData data, CharacterEquipment equipment, WeatherType weather)
     {
         status.TickNeeds(_hungerDeltaPerTurn, _sleepDeltaPerTurn, _funDeltaPerTurn, data);
         float weatherHealthDelta = 0f;
@@ -40,9 +40,19 @@ public class CharacterNeedsController
                 weatherHealthDelta = -4f;
                 break;
         }
-        if (weatherHealthDelta != 0f)
-            status.AddHealth(weatherHealthDelta, data);
+        if (weatherHealthDelta < 0f)
+        {
+            if (weather == WeatherType.Hot || weather == WeatherType.Heatwave || weather == WeatherType.Drought)
+                weatherHealthDelta *= equipment.GetHeatDamageMultiplier();
+
+            if (weather == WeatherType.Cold || weather == WeatherType.ExtremeCold)
+                weatherHealthDelta *= equipment.GetColdDamageMultiplier();
+        }
+
+        status.AddHealth(weatherHealthDelta, data);
+        
         if (status.Hunger <= 0f)
             status.AddHealth(_healthDeltaWhenStarving, data);
+            
     }
 }

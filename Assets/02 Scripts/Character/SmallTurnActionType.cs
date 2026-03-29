@@ -9,6 +9,11 @@ public enum SmallTurnActionType
     Build, 
     Social, 
     Rest, 
-    Eat
+    Eat,
+    EquipWoodenSpear,
+    EquipStoneSpear,
+    EquipFan,
+    UseBandage,
+    UseMedkit
 }
 

@@ -7,6 +7,8 @@ public class CharacterEntity : MonoBehaviour
     public CharacterData Data;
     
     [field: SerializeField] public CharacterStatus Status { get; private set; } = new CharacterStatus();
+    [field: SerializeField] public CharacterEquipment Equipment { get; private set; } = new CharacterEquipment();
+
     public bool IsDead { get; private set; }
 
     private CharacterBrain _brain = new CharacterBrain();
@@ -30,6 +32,8 @@ public class CharacterEntity : MonoBehaviour
     [Header("건축 레시피")]
     [SerializeField] private BuildRecipe[] _buildRecipes;
 
+    [Header("제작 레시피")]
+    [SerializeField] private CraftRecipe[] _craftRecipes;
 
     private CharacterMover _mover;
     private CharacterNeedsController _needsController;
@@ -42,7 +46,7 @@ public class CharacterEntity : MonoBehaviour
         _mover = new CharacterMover(transform, _moveDuration);
         _needsController = new CharacterNeedsController(_hungerDeltaPerTurn, _sleepDeltaPerTurn, _funDeltaPerTurn, _healthDeltaWhenStarving);
         _lifeController = new CharacterLifeController();
-        _taskController = new CharacterTaskController(_maxMoveTilesPerTurn, _buildRecipes);
+        _taskController = new CharacterTaskController(_maxMoveTilesPerTurn, _buildRecipes, _craftRecipes);
 
     }
     private void OnEnable()
@@ -83,7 +87,7 @@ public class CharacterEntity : MonoBehaviour
         SmallTurnLogController logController)
     {
 
-        _needsController.Tick(Status, Data, selection.Weather);
+        _needsController.Tick(Status, Data, Equipment, selection.Weather);
         if (Status.Hunger <= 0f)
         {
             logController.AddLog(TextUtil.ApplyKoreanParticles( $"[{smallTurn} 턴] {Data.Name}은/는 배고파서 체력이 줄고 있습니다.({_healthDeltaWhenStarving})"));
@@ -95,7 +99,8 @@ public class CharacterEntity : MonoBehaviour
         if (CurrentTileNode == null)
             SetCurrentTileNode(_mover.GetNearestTileNode(activeNodes, transform.position));
 
-        SmallTurnActionType action = _taskController.ResolveAction(Data, selection, _brain);
+        SmallTurnActionType action = _taskController.ResolveAction(Data, Status, Equipment, selection, _brain);
+
 
         if (action == SmallTurnActionType.Gather)
         {
@@ -126,8 +131,61 @@ public class CharacterEntity : MonoBehaviour
             if (_lifeController.TryHandleDeath(this, smallTurn, logController)) yield break;
             yield break;
         }
+        if (action == SmallTurnActionType.Craft)
+        {
+            yield return _taskController.RunCraftTurn(this, smallTurn, logController);
+            if (_lifeController.TryHandleDeath(this, smallTurn, logController)) yield break;
+            yield break;
+        }
+        if (action == SmallTurnActionType.EquipWoodenSpear)
+        {
+            _taskController.RunEquipWoodenSpearTurn(this, smallTurn, logController);
+            if (_lifeController.TryHandleDeath(this, smallTurn, logController)) yield break;
+            yield break;
+        }
+
+        if (action == SmallTurnActionType.EquipStoneSpear)
+        {
+            _taskController.RunEquipStoneSpearTurn(this, smallTurn, logController);
+            if (_lifeController.TryHandleDeath(this, smallTurn, logController)) yield break;
+            yield break;
+        }
+
+        if (action == SmallTurnActionType.EquipFan)
+        {
+            _taskController.RunEquipFanTurn(this, smallTurn, logController);
+            if (_lifeController.TryHandleDeath(this, smallTurn, logController)) yield break;
+            yield break;
+        }
+
+        if (action == SmallTurnActionType.UseBandage)
+        {
+            _taskController.RunUseBandageTurn(this, smallTurn, logController);
+            if (_lifeController.TryHandleDeath(this, smallTurn, logController)) yield break;
+            yield break;
+        }
+
+        if (action == SmallTurnActionType.UseMedkit)
+        {
+            _taskController.RunUseMedkitTurn(this, smallTurn, logController);
+            if (_lifeController.TryHandleDeath(this, smallTurn, logController)) yield break;
+            yield break;
+        }
     }
 
+    public void EquipWeaponWithSwap(WeaponType newWeapon, PlayerResourceInventory inventory)
+    {
+        if (newWeapon == WeaponType.None) return;
+
+        WeaponType oldWeapon = Equipment.Weapon;
+        if (oldWeapon != WeaponType.None)
+        {
+            inventory.AddWeapon(oldWeapon, 1); // 기존 무기 반환
+            Equipment.UnequipWeapon();
+        }
+
+        Equipment.TryEquipWeapon(newWeapon); // 새 무기 장착
+    }
     
 
     

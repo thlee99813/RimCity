@@ -3,7 +3,12 @@ using System.Collections.Generic;
 
 public class CharacterBrain
 {
-    public SmallTurnActionType DecideSmallTurnAction(CharacterData data, BigTurnSelectionData selection)
+    public SmallTurnActionType DecideSmallTurnAction(
+    CharacterData data,
+    CharacterStatus status,
+    CharacterEquipment equipment,
+    PlayerResourceInventory inventory,
+    BigTurnSelectionData selection)
     {
         Dictionary<SmallTurnActionType, int> weights = new Dictionary<SmallTurnActionType, int>
         {
@@ -23,9 +28,23 @@ public class CharacterBrain
         if (selection.Policy == PolicyType.SocialFirst) weights[SmallTurnActionType.Social] += 20;
         if (selection.Policy == PolicyType.CombatFirst) weights[SmallTurnActionType.Wander] += 15;
 
+        if (inventory.WoodenSpear > 0 && equipment.Weapon != WeaponType.WoodenSpear)
+            weights[SmallTurnActionType.EquipWoodenSpear] = 12;
+
+        if (inventory.StoneSpear > 0 && equipment.Weapon != WeaponType.StoneSpear)
+            weights[SmallTurnActionType.EquipStoneSpear] = 16;
+
+        if (inventory.Fan > 0 && equipment.Utility != UtilityType.Fan)
+            weights[SmallTurnActionType.EquipFan] = 10;
+
+        if (status.Health <= data.MaxHealth * 0.5f && inventory.Bandage > 0)
+            weights[SmallTurnActionType.UseBandage] = 120;
+
+        if (status.Health <= data.MaxHealth * 0.3f && inventory.Medkit > 0)
+            weights[SmallTurnActionType.UseMedkit] = 220;
+
         return WeightedPick(weights);
     }
-
     private T WeightedPick<T>(Dictionary<T, int> weights)
     {
         int total = 0;
