@@ -297,6 +297,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4054055818366341885}
+  - component: {fileID: 4636049425103852970}
   m_Layer: 0
   m_Name: BigFire
   m_TagString: LobbyTrigger
@@ -320,3 +321,16 @@ Transform:
   - {fileID: 5820513903011589457}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 45, z: 0}
+--- !u!114 &4636049425103852970
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5720200806928582994}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ceb0fca3aca87434fa7f9b847bafe75b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::StructureEffectMarker
+  Type: 2

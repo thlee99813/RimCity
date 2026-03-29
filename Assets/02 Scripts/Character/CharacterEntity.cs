@@ -81,26 +81,46 @@ public class CharacterEntity : MonoBehaviour
     }
 
     public IEnumerator RunSmallTurn(
-        BigTurnSelectionData selection,
-        int smallTurn,
-        List<TileNode> activeNodes,
-        SmallTurnLogController logController)
+    BigTurnSelectionData selection,
+    int smallTurn,
+    List<TileNode> activeNodes,
+    SmallTurnLogController logController)
     {
-
-        _needsController.Tick(Status, Data, Equipment, selection.Weather);
-        if (Status.Hunger <= 0f)
-        {
-            logController.AddLog(TextUtil.ApplyKoreanParticles( $"[{smallTurn} 턴] {Data.Name}은/는 배고파서 체력이 줄고 있습니다.({_healthDeltaWhenStarving})"));
-        }
-        if (_lifeController.TryHandleDeath(this, smallTurn, logController)) yield break;
-
         if (activeNodes == null || activeNodes.Count == 0) yield break;
 
         if (CurrentTileNode == null)
             SetCurrentTileNode(_mover.GetNearestTileNode(activeNodes, transform.position));
 
-        SmallTurnActionType action = _taskController.ResolveAction(Data, Status, Equipment, selection, _brain);
+        CharacterNeedsController.StructureEffectReport report =
+            _needsController.Tick(Status, Data, Equipment, selection.Weather, CurrentTileNode, activeNodes);
 
+        if (report.HasAny)
+        {
+            string effectText = "";
+            if (report.HasTorch) effectText += "횃불 ";
+            if (report.HasCampfire) effectText += "모닥불 ";
+            if (report.HasSweatingStone) effectText += "발한석 ";
+
+            logController.AddLog(
+                TextUtil.ApplyKoreanParticles(
+                    $"[{smallTurn} 턴] {Data.Name}은/는 {effectText}영향으로 기분이 좋아집니다."
+                )               
+            );
+
+        }
+
+        if (Status.Hunger <= 0f)
+        {
+            logController.AddLog(
+                TextUtil.ApplyKoreanParticles(
+                    $"[{smallTurn} 턴] {Data.Name}은/는 배고파서 체력이 줄고 있습니다.({_healthDeltaWhenStarving})"
+                )
+            );
+        }
+
+        if (_lifeController.TryHandleDeath(this, smallTurn, logController)) yield break;
+
+        SmallTurnActionType action = _taskController.ResolveAction(Data, Status, Equipment, selection, _brain);
 
         if (action == SmallTurnActionType.Gather)
         {
@@ -116,27 +136,20 @@ public class CharacterEntity : MonoBehaviour
             yield break;
         }
 
-        logController.AddLog(TextUtil.ApplyKoreanParticles($"[{smallTurn} 턴] {Data.Name}은/는 {CharacterActionText.ToActionText(action)}"));
-
-        if (action == SmallTurnActionType.Wander)
-        {
-            TileNode nextNode = _mover.GetRandomNeighborNode(CurrentTileNode, activeNodes);
-            if (nextNode != null)
-                yield return MoveToTile(nextNode);
-        }
-
         if (action == SmallTurnActionType.Build)
         {
             yield return _taskController.RunBuildTurn(this, smallTurn, activeNodes, logController);
             if (_lifeController.TryHandleDeath(this, smallTurn, logController)) yield break;
             yield break;
         }
+
         if (action == SmallTurnActionType.Craft)
         {
             yield return _taskController.RunCraftTurn(this, smallTurn, logController);
             if (_lifeController.TryHandleDeath(this, smallTurn, logController)) yield break;
             yield break;
         }
+
         if (action == SmallTurnActionType.EquipWoodenSpear)
         {
             _taskController.RunEquipWoodenSpearTurn(this, smallTurn, logController);
@@ -171,7 +184,21 @@ public class CharacterEntity : MonoBehaviour
             if (_lifeController.TryHandleDeath(this, smallTurn, logController)) yield break;
             yield break;
         }
+
+        logController.AddLog(
+            TextUtil.ApplyKoreanParticles(
+                $"[{smallTurn} 턴] {Data.Name}은/는 {CharacterActionText.ToActionText(action)}"
+            )
+        );
+
+        if (action == SmallTurnActionType.Wander)
+        {
+            TileNode nextNode = _mover.GetRandomNeighborNode(CurrentTileNode, activeNodes);
+            if (nextNode != null)
+                yield return MoveToTile(nextNode);
+        }
     }
+
 
     public void EquipWeaponWithSwap(WeaponType newWeapon, PlayerResourceInventory inventory)
     {
