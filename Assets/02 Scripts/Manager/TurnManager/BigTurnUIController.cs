@@ -20,6 +20,10 @@ public class BigTurnUIController : MonoBehaviour
     [SerializeField] private GameObject[] _eventOptionButtons;
     [SerializeField] private TMP_Text[] _eventOptionTexts;
 
+    [SerializeField] private GameObject _expandYesButton;
+
+
+    private int _openedBigTurnIndex;
 
     private PolicyType _selectedPolicy;
     private WeatherType _selectedWeather;
@@ -34,18 +38,16 @@ public class BigTurnUIController : MonoBehaviour
 
     public void Open(int bigTurnIndex, BigTurnSelectionData prevSelection)
     {
+        _openedBigTurnIndex = bigTurnIndex;
+
         _bigTurnUI.SetActive(true);
         ShowOnly(_policyPanel);
 
-
-
         _selectedPolicy = prevSelection.Policy;
-        _selectedExpand = prevSelection.ExpandTerritory;
+        _selectedExpand = false;
 
         _weatherOptions = PickRandomWeatherOptions();
-
-        int eventOptionCount = UnityEngine.Random.Range(2, 5);
-        _eventOptions = PickRandomEventOptions(eventOptionCount);
+        _eventOptions = BuildEventOptions(bigTurnIndex);
 
         _selectedWeather = _weatherOptions[0];
         _selectedEvent = _eventOptions[0];
@@ -53,15 +55,21 @@ public class BigTurnUIController : MonoBehaviour
         _weatherOptionTextA.text = TextUtil.TranslateKorean(_weatherOptions[0]);
         _weatherOptionTextB.text = TextUtil.TranslateKorean(_weatherOptions[1]);
 
-
         for (int i = 0; i < _eventOptionTexts.Length; i++)
         {
             bool active = i < _eventOptions.Length;
             _eventOptionButtons[i].SetActive(active);
             if (active) _eventOptionTexts[i].text = TextUtil.TranslateKorean(_eventOptions[i]);
         }
+        RefreshExpandYesButton();
+
     }
 
+    private void RefreshExpandYesButton()
+    {
+        bool canExpandThisTurn = IsExpandForcedTurn(_openedBigTurnIndex);
+        _expandYesButton.SetActive(canExpandThisTurn);
+    }
     public void Close()
     {
         _bigTurnUI.SetActive(false);
@@ -137,29 +145,27 @@ public class BigTurnUIController : MonoBehaviour
         return new WeatherType[] { first, second };
     }
 
-    private WorldEventType[] PickRandomEventOptions(int count)
+    private WorldEventType[] BuildEventOptions(int bigTurnIndex)
     {
-        Dictionary<WorldEventType, int> weights  = new Dictionary<WorldEventType, int>
-        {
-            { WorldEventType.None, 50 },
-            { WorldEventType.Visitor, 35 },
-            { WorldEventType.Raid, 15 }
-        };
+        List<WorldEventType> options = new List<WorldEventType>(4);
 
-        List<WorldEventType> selected = new List<WorldEventType>();
-        Dictionary<WorldEventType, int> pool = new Dictionary<WorldEventType, int>(weights);
+        // Visitor는 강제 턴에만
+        if (IsVisitorForcedTurn(bigTurnIndex))
+            options.Add(WorldEventType.Visitor);
 
-        int safeCount = Mathf.Min(count, pool.Count);
+        // 다른 조건 이벤트들 (추가 예정)
+        // if (ConditionA(bigTurnIndex)) options.Add(WorldEventType.X);
 
-        for (int i = 0; i < safeCount; i++)
-        {
-            WorldEventType picked = WeightedPick(pool);
-            selected.Add(picked);
-            pool.Remove(picked);
-        }
+        if (options.Count == 0)
+            options.Add(WorldEventType.None);
 
-        return selected.ToArray();
+        if (options.Count > 4)
+            options.RemoveRange(4, options.Count - 4);
+
+        return options.ToArray();
     }
+
+
     private void ShowOnly(GameObject panel)
     {
         _policyPanel.SetActive(panel == _policyPanel);
@@ -193,20 +199,21 @@ public class BigTurnUIController : MonoBehaviour
 
         ShowOnly(_expandPanel);
     }
+
+
     public void SelectExpand(bool value)
     {
         _selectedExpand = value;
         Confirm();
     }
+
     private IEnumerator VisitorFlowThenOpenExpand()
     {
         _isEncounterFlow = true;
 
         int prevCameraIndex = CameraManager.Instance.CurrentCameraIndex;
-
         ShowOnly(null);
-
-        CameraManager.Instance.ActivateCamera(5);
+        CameraManager.Instance.ActivateCamera(0);
 
         yield return StartCoroutine(_encounterEventController.RunEncounter());
 
@@ -215,4 +222,18 @@ public class BigTurnUIController : MonoBehaviour
         _isEncounterFlow = false;
         ShowOnly(_expandPanel);
     }
+
+
+
+    private bool IsExpandForcedTurn(int bigTurnIndex)
+    {
+        return bigTurnIndex >= 1 && ((bigTurnIndex - 1) % 2 == 0);
+    }
+
+    private bool IsVisitorForcedTurn(int bigTurnIndex)
+    {
+        return bigTurnIndex >= 1 && ((bigTurnIndex - 1) % 3 == 0);
+    }
+    
+
 }
