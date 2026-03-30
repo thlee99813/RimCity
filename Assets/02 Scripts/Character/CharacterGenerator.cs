@@ -41,11 +41,12 @@ public class CharacterGenerator : MonoBehaviour
             MaxMood = 100f
         };
 
-        data.Stats[StatType.Combat] = UnityEngine.Random.Range(0, 6);
-        data.Stats[StatType.Craft] = UnityEngine.Random.Range(0, 6);
-        data.Stats[StatType.Build] = UnityEngine.Random.Range(0, 6);
-        data.Stats[StatType.Gather] = UnityEngine.Random.Range(0, 6);
-        data.Stats[StatType.Social] = UnityEngine.Random.Range(0, 6);
+        foreach (StatType type in Enum.GetValues(typeof(StatType)))
+        {
+        data.Stats[type] = UnityEngine.Random.Range(0, 8);
+        data.StatProgress[type] = 0;
+        }
+
 
         
 

@@ -12,14 +12,20 @@ public class CharacterGatherTask
 
 public IEnumerator RunTurn(CharacterEntity owner, int smallTurn, List<TileNode> activeNodes, SmallTurnLogController log, int maxMoveTilesPerTurn, ResourceType preferredType = ResourceType.None)
     {
-        if (!IsForced)
+       if (!IsForced)
         {
-            ResourceType pick = preferredType != ResourceType.None ? preferredType : DecideGatherTargetType();
+            int gatherLevel = owner.GetStatLevel(StatType.Gather);
+
+            ResourceType pick = preferredType;
+            if (pick == ResourceType.None || !IsGatherTargetAllowed(pick, gatherLevel))
+                pick = DecideGatherTargetType(gatherLevel);
+
             if (!TryAcquire(owner.CurrentTileNode, activeNodes, pick))
                 yield break;
 
             IsForced = true;
         }
+
 
         if (!IsValid(activeNodes))
         {
@@ -33,6 +39,7 @@ public IEnumerator RunTurn(CharacterEntity owner, int smallTurn, List<TileNode> 
             _targetResource.Consume(1);
             GameManager.Instance.PlayerInventory.Add(_targetType, 3);
             log.AddLog($"[{smallTurn} 턴] {owner.Data.Name}은/는 {ToKorean(_targetType)}를 수집합니다.");
+            owner.AddStatActionCount(StatType.Gather, 1, smallTurn, log);
             Clear();
             yield break;
         }
@@ -103,14 +110,44 @@ public IEnumerator RunTurn(CharacterEntity owner, int smallTurn, List<TileNode> 
         _targetType = ResourceType.None;
     }
 
-    private ResourceType DecideGatherTargetType()
+    private bool IsGatherTargetAllowed(ResourceType type, int gatherLevel)
     {
-        int roll = Random.Range(0, 4);
-        if (roll == 0) return ResourceType.Berry;
-        if (roll == 1) return ResourceType.Tree;
-        if (roll == 2) return ResourceType.Rock;
-        return ResourceType.Grass;
+        if (type == ResourceType.Berry || type == ResourceType.Tree) return true;
+        if (type == ResourceType.Grass) return gatherLevel >= 2;
+        if (type == ResourceType.Rock) return gatherLevel >= 4;
+        return false;
     }
+
+    private ResourceType DecideGatherTargetType(int gatherLevel)
+    {
+        Dictionary<ResourceType, int> weights = new Dictionary<ResourceType, int>
+        {
+            { ResourceType.Berry, 35 },
+            { ResourceType.Tree, 35 },
+            { ResourceType.Grass, gatherLevel >= 2 ? 20 : 0 },
+            { ResourceType.Rock, gatherLevel >= 4 ? 10 : 0 }
+        };
+
+        return WeightedPickResource(weights);
+    }
+
+    private ResourceType WeightedPickResource(Dictionary<ResourceType, int> weights)
+    {
+        int total = 0;
+        foreach (KeyValuePair<ResourceType, int> e in weights) total += Mathf.Max(0, e.Value);
+        if (total <= 0) return ResourceType.Berry;
+
+        int roll = Random.Range(0, total);
+        int acc = 0;
+        foreach (KeyValuePair<ResourceType, int> e in weights)
+        {
+            int w = Mathf.Max(0, e.Value);
+            acc += w;
+            if (roll < acc) return e.Key;
+        }
+        return ResourceType.Berry;
+    }
+
 
     private string ToKorean(ResourceType t)
     {

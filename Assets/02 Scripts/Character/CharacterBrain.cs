@@ -3,6 +3,10 @@ using System.Collections.Generic;
 
 public class CharacterBrain
 {
+    private const int PolicyBonus = 15;
+    private const int StatBonusPerLevel = 1;
+    private const int StatBonusMax = 10;
+
     public SmallTurnActionType DecideSmallTurnAction(
     CharacterData data,
     CharacterStatus status,
@@ -22,11 +26,18 @@ public class CharacterBrain
             { SmallTurnActionType.Eat, 5 }
         };
 
-        if (selection.Policy == PolicyType.GatherFirst) weights[SmallTurnActionType.Gather] += 20;
-        if (selection.Policy == PolicyType.CraftFirst) weights[SmallTurnActionType.Craft] += 20;
-        if (selection.Policy == PolicyType.BuildFirst) weights[SmallTurnActionType.Build] += 20;
-        if (selection.Policy == PolicyType.SocialFirst) weights[SmallTurnActionType.Social] += 20;
-        if (selection.Policy == PolicyType.CombatFirst) weights[SmallTurnActionType.Wander] += 15;
+        if (selection.Policy == PolicyType.GatherFirst) weights[SmallTurnActionType.Gather] += PolicyBonus;
+        if (selection.Policy == PolicyType.CraftFirst) weights[SmallTurnActionType.Craft] += PolicyBonus;
+        if (selection.Policy == PolicyType.BuildFirst) weights[SmallTurnActionType.Build] += PolicyBonus;
+        if (selection.Policy == PolicyType.SocialFirst) weights[SmallTurnActionType.Social] += PolicyBonus;
+        if (selection.Policy == PolicyType.CombatFirst) weights[SmallTurnActionType.Wander] += PolicyBonus;
+
+        weights[SmallTurnActionType.Gather] += GetStatBonus(data, StatType.Gather);
+        weights[SmallTurnActionType.Craft] += GetStatBonus(data, StatType.Craft);
+        weights[SmallTurnActionType.Build] += GetStatBonus(data, StatType.Build);
+        weights[SmallTurnActionType.Social] += GetStatBonus(data, StatType.Social);
+        weights[SmallTurnActionType.Wander] += GetStatBonus(data, StatType.Combat);
+
         if (inventory.Bandage <= 0) weights[SmallTurnActionType.Craft] += 2;
         if (inventory.Medkit <= 0)  weights[SmallTurnActionType.Craft] += 4;
 
@@ -66,4 +77,15 @@ public class CharacterBrain
         foreach (KeyValuePair<T, int> entry in weights) return entry.Key;
         return default;
     }
+
+    private int GetStatBonus(CharacterData data, StatType type)
+    {
+        if (data == null || data.Stats == null) return 0;
+        if (!data.Stats.TryGetValue(type, out int level)) level = 1;
+
+        level = Mathf.Clamp(level, 1, 11);
+        int bonus = (level - 1) * StatBonusPerLevel;
+        return Mathf.Clamp(bonus, 0, StatBonusMax);
+    }
+
 }

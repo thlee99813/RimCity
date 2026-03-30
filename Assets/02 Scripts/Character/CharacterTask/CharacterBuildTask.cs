@@ -21,6 +21,7 @@ public class CharacterBuildTask
         SmallTurnLogController log,
         BuildRecipe[] recipes,
         int maxMoveTilesPerTurn,
+        int buildLevel,
         string forcedRecipeId = null)
     {
         if (!IsForced)
@@ -31,7 +32,7 @@ public class CharacterBuildTask
             if (recipes == null || recipes.Length == 0) yield break;
 
             PlayerResourceInventory inv = GameManager.Instance.PlayerInventory;
-            _recipe = PickStartRecipe(recipes, inv, forcedRecipeId);
+            _recipe = PickStartRecipe(recipes, inv, forcedRecipeId, buildLevel);
 
             if (_recipe == null)
             {
@@ -96,6 +97,8 @@ public class CharacterBuildTask
         _targetTile.SetStructure(built);
 
         log.AddLog($"[{smallTurn} 턴] {owner.Data.Name}은/는 {_recipe.DisplayName} 건설을 완료했습니다.");
+        owner.AddStatActionCount(StatType.Build, 1, smallTurn, log);
+
         Clear();
     }
 
@@ -143,27 +146,49 @@ public class CharacterBuildTask
         return null;
     }
 
-    private BuildRecipe PickStartRecipe(BuildRecipe[] recipes, PlayerResourceInventory inv, string forcedRecipeId)
+    private BuildRecipe PickStartRecipe(BuildRecipe[] recipes, PlayerResourceInventory inv, string forcedRecipeId, int buildLevel)
     {
+        buildLevel = Mathf.Clamp(buildLevel, 1, 11);
+
         if (!string.IsNullOrEmpty(forcedRecipeId))
         {
             BuildRecipe forced = FindRecipeById(recipes, forcedRecipeId);
             if (forced == null || forced.Prefab == null) return null;
+            if (buildLevel < Mathf.Max(1, forced.RequiredBuildLevel)) return null;
             if (!CharacterTaskCommon.CanAfford(inv, forced.Costs)) return null;
             return forced;
         }
 
-        List<BuildRecipe> affordable = new List<BuildRecipe>();
+        List<BuildRecipe> candidates = new List<BuildRecipe>();
+        List<int> weights = new List<int>();
+        int total = 0;
+
         for (int i = 0; i < recipes.Length; i++)
         {
             BuildRecipe r = recipes[i];
             if (r == null || r.Prefab == null) continue;
+            if (buildLevel < Mathf.Max(1, r.RequiredBuildLevel)) continue;
             if (!CharacterTaskCommon.CanAfford(inv, r.Costs)) continue;
-            affordable.Add(r);
+
+            int rec = Mathf.Max(r.RequiredBuildLevel, r.RecommendedBuildLevel);
+            int w = buildLevel >= rec ? 3 : 1;
+
+            candidates.Add(r);
+            weights.Add(w);
+            total += w;
         }
 
-        if (affordable.Count == 0) return null;
-        return affordable[Random.Range(0, affordable.Count)];
+        if (candidates.Count == 0) return null;
+
+        int roll = Random.Range(0, total);
+        int acc = 0;
+        for (int i = 0; i < candidates.Count; i++)
+        {
+            acc += weights[i];
+            if (roll < acc) return candidates[i];
+        }
+
+        return candidates[0];
     }
 
 }

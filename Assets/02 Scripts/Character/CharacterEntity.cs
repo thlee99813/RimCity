@@ -1,6 +1,8 @@
 ﻿using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using System;
+
 
 public class CharacterEntity : MonoBehaviour
 {
@@ -39,6 +41,8 @@ public class CharacterEntity : MonoBehaviour
     private CharacterNeedsController _needsController;
     private CharacterLifeController _lifeController;
 
+    private const int StatMaxLevel = 11;
+    private const int ActionsPerLevel = 3;
     public TileNode CurrentTileNode => _mover.CurrentTileNode;
 
     private void Awake()
@@ -62,6 +66,7 @@ public class CharacterEntity : MonoBehaviour
     public void Initialize(CharacterData data)
     {
         Data = data;
+        NormalizeStatDictionaries();
         Status.InitializeFromData(data);
     }
 
@@ -228,6 +233,63 @@ public class CharacterEntity : MonoBehaviour
 
         Equipment.TryEquipWeapon(newWeapon); // 새 무기 장착
     }
+
+    private void NormalizeStatDictionaries()
+    {
+        if (Data.Stats == null) Data.Stats = new Dictionary<StatType, int>();
+        if (Data.StatProgress == null) Data.StatProgress = new Dictionary<StatType, int>();
+
+        foreach (StatType type in Enum.GetValues(typeof(StatType)))
+        {
+            if (!Data.Stats.ContainsKey(type)) Data.Stats[type] = 1;
+            Data.Stats[type] = Mathf.Clamp(Data.Stats[type], 1, StatMaxLevel);
+
+            if (!Data.StatProgress.ContainsKey(type)) Data.StatProgress[type] = 0;
+            if (Data.StatProgress[type] < 0) Data.StatProgress[type] = 0;
+        }
+    }
+
+    public int GetStatLevel(StatType type)
+    {
+        if (Data == null || Data.Stats == null) return 1;
+        if (!Data.Stats.TryGetValue(type, out int level)) return 1;
+        return Mathf.Clamp(level, 1, StatMaxLevel);
+    }
+
+    public void AddStatActionCount(StatType type, int amount, int smallTurn, SmallTurnLogController log)
+    {
+        if (amount <= 0) return;
+
+        NormalizeStatDictionaries();
+
+        int level = GetStatLevel(type);
+        if (level >= StatMaxLevel) return;
+
+        Data.StatProgress[type] += amount;
+
+        while (Data.StatProgress[type] >= ActionsPerLevel && level < StatMaxLevel)
+        {
+            Data.StatProgress[type] -= ActionsPerLevel;
+            level++;
+            Data.Stats[type] = level;
+
+            if (log != null)
+                log.AddLog($"[{smallTurn} 턴] {Data.Name}은/는 {StatToKorean(type)} 레벨이 {level}이 되었습니다.");
+        }
+    }
+
+    private string StatToKorean(StatType type)
+    {
+        switch (type)
+        {
+            case StatType.Combat: return "전투";
+            case StatType.Craft: return "제작";
+            case StatType.Build: return "건축";
+            case StatType.Gather: return "수집";
+            case StatType.Social: return "매력";
+            default: return "능력";
+        }
+}
     
 
     

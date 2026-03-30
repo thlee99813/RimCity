@@ -23,6 +23,8 @@ public class CharacterData
     public float MaxFun = 100f;    
 
     public Dictionary<StatType, int> Stats = new();
+    
+    public Dictionary<StatType, int> StatProgress = new(); //스탯레벨 3증가시 레벨업
 
     public Dictionary<NeedType, float> Needs = new();
 

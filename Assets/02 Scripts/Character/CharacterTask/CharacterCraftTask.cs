@@ -18,6 +18,7 @@ public class CharacterCraftTask
         int smallTurn,
         SmallTurnLogController log,
         CraftRecipe[] recipes,
+        int craftLevel,
         string forcedRecipeId = null)    
     {
         if (!IsForced)
@@ -28,7 +29,7 @@ public class CharacterCraftTask
             if (recipes == null || recipes.Length == 0) yield break;
 
             PlayerResourceInventory inv = GameManager.Instance.PlayerInventory;
-            _recipe = PickStartRecipe(recipes, inv, forcedRecipeId);
+            _recipe = PickStartRecipe(recipes, inv, forcedRecipeId, craftLevel);
 
             if (_recipe == null)
             {
@@ -63,6 +64,7 @@ public class CharacterCraftTask
 
         ApplyCraftResult(owner, GameManager.Instance.PlayerInventory, _recipe.Id);
         log.AddLog($"[{smallTurn} 턴] {owner.Data.Name}은/는 {_recipe.DisplayName} 제작을 완료했습니다.");
+        owner.AddStatActionCount(StatType.Craft, 1, smallTurn, log);
 
         Clear();
     }
@@ -118,53 +120,52 @@ public class CharacterCraftTask
         return null;
     }
 
-    private CraftRecipe PickStartRecipe(CraftRecipe[] recipes, PlayerResourceInventory inv, string forcedRecipeId)
+    private CraftRecipe PickStartRecipe(CraftRecipe[] recipes, PlayerResourceInventory inv, string forcedRecipeId, int craftLevel)
     {
+        craftLevel = Mathf.Clamp(craftLevel, 1, 11);
+
         if (!string.IsNullOrEmpty(forcedRecipeId))
         {
             CraftRecipe forced = FindRecipeById(recipes, forcedRecipeId);
             if (forced == null) return null;
+            if (craftLevel < Mathf.Max(1, forced.RequiredCraftLevel)) return null;
             if (!CharacterTaskCommon.CanAfford(inv, forced.Costs)) return null;
             return forced;
         }
 
-        List<CraftRecipe> affordable = new List<CraftRecipe>();
+        List<CraftRecipe> candidates = new List<CraftRecipe>();
+        List<int> weights = new List<int>();
+        int total = 0;
+
         for (int i = 0; i < recipes.Length; i++)
         {
             CraftRecipe r = recipes[i];
             if (r == null) continue;
+            if (craftLevel < Mathf.Max(1, r.RequiredCraftLevel)) continue;
             if (!CharacterTaskCommon.CanAfford(inv, r.Costs)) continue;
-            affordable.Add(r);
-        }
 
-        if (affordable.Count == 0) return null;
-        int total = 0;
-        List<int> recipeWeights = new List<int>(affordable.Count);
+            int rec = Mathf.Max(r.RequiredCraftLevel, r.RecommendedCraftLevel);
+            int w = craftLevel >= rec ? 3 : 1;
 
-        for (int i = 0; i < affordable.Count; i++)
-        {
-            CraftRecipe r = affordable[i];
-            int w = 1;
+            if (r.Id == ItemIds.Bandage) w += (inv.Bandage <= 0 ? 7 : 2);
+            else if (r.Id == ItemIds.Medkit) w += (inv.Medkit <= 0 ? 9 : 2);
 
-            if (r.Id == ItemIds.Bandage)
-                w = inv.Bandage <= 0 ? 10 : 3;
-            else if (r.Id == ItemIds.Medkit)
-                w = inv.Medkit <= 0 ? 12 : 3;
-
-            recipeWeights.Add(w);
+            candidates.Add(r);
+            weights.Add(w);
             total += w;
         }
 
+        if (candidates.Count == 0) return null;
+
         int roll = Random.Range(0, total);
         int acc = 0;
-
-        for (int i = 0; i < affordable.Count; i++)
+        for (int i = 0; i < candidates.Count; i++)
         {
-            acc += recipeWeights[i];
-            if (roll < acc) return affordable[i];
+            acc += weights[i];
+            if (roll < acc) return candidates[i];
         }
 
-        return affordable[0];
-        }
+        return candidates[0];
+    }
 
     }

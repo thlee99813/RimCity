@@ -404,7 +404,7 @@ public class CharacterTaskController
         string forcedRecipeId = _nextBuildRecipeId;
         _nextBuildRecipeId = null;
 
-        yield return _buildTask.RunTurn(owner, smallTurn, activeNodes, logController, _buildRecipes, _maxMoveTilesPerTurn, forcedRecipeId);
+        yield return _buildTask.RunTurn(owner, smallTurn, activeNodes, logController, _buildRecipes, _maxMoveTilesPerTurn, owner.GetStatLevel(StatType.Build), forcedRecipeId);
 
         if (_buildTask.LastFailedByMissingResource)
             PushMissingFocus(_buildTask.LastMissingResourceType, 2);
@@ -415,7 +415,7 @@ public class CharacterTaskController
         string forcedRecipeId = _nextCraftRecipeId;
         _nextCraftRecipeId = null;
 
-        yield return _craftTask.RunTurn(owner, smallTurn, logController, _craftRecipes, forcedRecipeId);
+        yield return _craftTask.RunTurn(owner, smallTurn, logController, _craftRecipes, owner.GetStatLevel(StatType.Craft), forcedRecipeId);
 
         if (_craftTask.LastFailedByMissingResource)
             PushMissingFocus(_craftTask.LastMissingResourceType, 2);
