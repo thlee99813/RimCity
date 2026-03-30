@@ -113,8 +113,8 @@ public IEnumerator RunTurn(CharacterEntity owner, int smallTurn, List<TileNode> 
     private bool IsGatherTargetAllowed(ResourceType type, int gatherLevel)
     {
         if (type == ResourceType.Berry || type == ResourceType.Tree) return true;
-        if (type == ResourceType.Grass) return gatherLevel >= 2;
-        if (type == ResourceType.Rock) return gatherLevel >= 4;
+        if (type == ResourceType.Grass) return gatherLevel >= 4;
+        if (type == ResourceType.Rock) return gatherLevel >= 7;
         return false;
     }
 
@@ -124,8 +124,8 @@ public IEnumerator RunTurn(CharacterEntity owner, int smallTurn, List<TileNode> 
         {
             { ResourceType.Berry, 35 },
             { ResourceType.Tree, 35 },
-            { ResourceType.Grass, gatherLevel >= 2 ? 20 : 0 },
-            { ResourceType.Rock, gatherLevel >= 4 ? 10 : 0 }
+            { ResourceType.Grass, gatherLevel >= 4 ? 60 : 0 },
+            { ResourceType.Rock, gatherLevel >= 7 ? 30 : 0 }
         };
 
         return WeightedPickResource(weights);
