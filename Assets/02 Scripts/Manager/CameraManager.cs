@@ -17,7 +17,7 @@ public class CameraManager : Singleton<CameraManager>
 
     void Start()
     {
-        ActivateCamera(0);
+        ActivateCamera(1);
     }
 
     void Update()

@@ -35,7 +35,7 @@ public class CharacterGenerateUI : MonoBehaviour
 
     private void OnSubmit(string _)
     {
-        CameraManager.Instance.ActivateCamera(5);
+        CameraManager.Instance.ActivateCamera(0);
         _characterName = _nameInput.text.Trim();
 
         _previewCharacter = GameManager.Instance.CharacterGenerator.SpawnCharacter(_characterName);
