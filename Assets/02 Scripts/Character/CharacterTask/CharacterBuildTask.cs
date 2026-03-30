@@ -76,7 +76,7 @@ public class CharacterBuildTask
             }
 
             int moveCount = Mathf.Min(maxMoveTilesPerTurn, path.Count);
-            log.AddLog($"[{smallTurn} 턴] {owner.Data.Name}은/는 {_recipe.DisplayName} 건설 위치로 이동합니다. ({moveCount}칸)");
+            log.AddLog(TextUtil.ApplyKoreanParticles($"[{smallTurn} 턴] {owner.Data.Name}은/는 {_recipe.DisplayName} 건설 위치로 이동합니다. ({moveCount}칸)"));
 
             for (int i = 0; i < moveCount; i++)
                 yield return owner.MoveToTile(path[i]);
@@ -87,14 +87,14 @@ public class CharacterBuildTask
        _turnsRemaining--;
         if (_turnsRemaining > 0)
         {
-            log.AddLog($"[{smallTurn} 턴] {owner.Data.Name}은/는 {_recipe.DisplayName} 건설 중입니다. ({_turnsRemaining}턴 남음)");
+            log.AddLog(TextUtil.ApplyKoreanParticles($"[{smallTurn} 턴] {owner.Data.Name}은/는 {_recipe.DisplayName} 건설 중입니다. ({_turnsRemaining}턴 남음)"));
             yield break;
         }
 
         int buildFailChance = GetLowSkillFailChance(buildLevel, _recipe.RecommendedBuildLevel);
         if (buildFailChance > 0 && Random.Range(0, 100) < buildFailChance)
         {
-            log.AddLog($"[{smallTurn} 턴] {owner.Data.Name}은/는 {_recipe.DisplayName}을 건설하다가 손이 삐끗했습니다.");
+            log.AddLog(TextUtil.ApplyKoreanParticles($"[{smallTurn} 턴] {owner.Data.Name}은/는 {_recipe.DisplayName}을 건설하다가 손이 삐끗했습니다."));
             Clear();
             yield break;
         }
@@ -105,7 +105,7 @@ public class CharacterBuildTask
         built.transform.localRotation = Quaternion.identity;
         _targetTile.SetStructure(built);
 
-        log.AddLog($"[{smallTurn} 턴] {owner.Data.Name}은/는 {_recipe.DisplayName} 건설을 완료했습니다.");
+        log.AddLog(TextUtil.ApplyKoreanParticles($"[{smallTurn} 턴] {owner.Data.Name}은/는 {_recipe.DisplayName} 건설을 완료했습니다."));
         owner.AddStatActionCount(StatType.Build, 1, smallTurn, log);
 
         Clear();

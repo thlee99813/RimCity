@@ -30,7 +30,7 @@ public IEnumerator RunTurn(CharacterEntity owner, int smallTurn, List<TileNode> 
         if (!IsValid(activeNodes))
         {
             Clear();
-            log.AddLog($"[{smallTurn} 턴] {owner.Data.Name}은/는 수집 대상을 잃어버렸습니다.");
+            log.AddLog(TextUtil.ApplyKoreanParticles($"[{smallTurn} 턴] {owner.Data.Name}은/는 수집 대상을 잃어버렸습니다."));
             yield break;
         }
 
@@ -38,7 +38,7 @@ public IEnumerator RunTurn(CharacterEntity owner, int smallTurn, List<TileNode> 
         {
             _targetResource.Consume(1);
             GameManager.Instance.PlayerInventory.Add(_targetType, 3);
-            log.AddLog($"[{smallTurn} 턴] {owner.Data.Name}은/는 {ToKorean(_targetType)}를 수집합니다.");
+            log.AddLog(TextUtil.ApplyKoreanParticles($"[{smallTurn} 턴] {owner.Data.Name}은/는 {ToKorean(_targetType)}를 수집합니다."));
             owner.AddStatActionCount(StatType.Gather, 1, smallTurn, log);
             Clear();
             yield break;
@@ -48,12 +48,12 @@ public IEnumerator RunTurn(CharacterEntity owner, int smallTurn, List<TileNode> 
         if (path == null || path.Count == 0)
         {
             Clear();
-            log.AddLog($"[{smallTurn} 턴] {owner.Data.Name}은/는 수집 위치로 이동하지 못합니다.");
+            log.AddLog(TextUtil.ApplyKoreanParticles($"[{smallTurn} 턴] {owner.Data.Name}은/는 수집 위치로 이동하지 못합니다."));
             yield break;
         }
 
         int moveCount = Mathf.Min(maxMoveTilesPerTurn, path.Count);
-        log.AddLog($"[{smallTurn} 턴] {owner.Data.Name}은/는 {ToKorean(_targetType)}를 수집하러 이동합니다. ({moveCount}칸)");
+        log.AddLog(TextUtil.ApplyKoreanParticles($"[{smallTurn} 턴] {owner.Data.Name}은/는 {ToKorean(_targetType)}를 수집하러 이동합니다. ({moveCount}칸)"));
 
         for (int i = 0; i < moveCount; i++)
             yield return owner.MoveToTile(path[i]);

@@ -1,6 +1,7 @@
 using UnityEngine;
 using TMPro;
 using System.Collections.Generic;
+using System.Collections;
 public class BigTurnUIController : MonoBehaviour
 {
     [SerializeField] private GameObject _bigTurnUI;
@@ -27,6 +28,9 @@ public class BigTurnUIController : MonoBehaviour
 
     private WeatherType[] _weatherOptions = new WeatherType[2];
     private WorldEventType[] _eventOptions;
+
+    [SerializeField] private EncounterEventController _encounterEventController;
+    private bool _isEncounterFlow;
 
     public void Open(int bigTurnIndex, BigTurnSelectionData prevSelection)
     {
@@ -179,11 +183,36 @@ public class BigTurnUIController : MonoBehaviour
     public void SelectEvent(int optionIndex)
     {
         _selectedEvent = _eventOptions[optionIndex];
+
+        if (_selectedEvent == WorldEventType.Visitor)
+        {
+            if (_isEncounterFlow) return;
+            StartCoroutine(VisitorFlowThenOpenExpand());
+            return;
+        }
+
         ShowOnly(_expandPanel);
     }
     public void SelectExpand(bool value)
     {
         _selectedExpand = value;
         Confirm();
+    }
+    private IEnumerator VisitorFlowThenOpenExpand()
+    {
+        _isEncounterFlow = true;
+
+        int prevCameraIndex = CameraManager.Instance.CurrentCameraIndex;
+
+        ShowOnly(null);
+
+        CameraManager.Instance.ActivateCamera(5);
+
+        yield return StartCoroutine(_encounterEventController.RunEncounter());
+
+        CameraManager.Instance.ActivateCamera(prevCameraIndex);
+
+        _isEncounterFlow = false;
+        ShowOnly(_expandPanel);
     }
 }

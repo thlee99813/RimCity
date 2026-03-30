@@ -13,6 +13,8 @@ public class CameraManager : Singleton<CameraManager>
     public CinemachineCamera[] cams;
     public int activePriority = 20;
     public int inactivePriority = 0;
+    public int CurrentCameraIndex { get; private set; }
+
     void Start()
     {
         ActivateCamera(0);
@@ -25,10 +27,11 @@ public class CameraManager : Singleton<CameraManager>
 
     public void ActivateCamera(int index)
     {
-        for (int i = 0; i < cams.Length; i++)
-            {
-                cams[i].Priority = (i == index) ? activePriority : inactivePriority;
+        CurrentCameraIndex = index;
 
-            }
+        for (int i = 0; i < cams.Length; i++)
+        {
+            cams[i].Priority = (i == index) ? activePriority : inactivePriority;
+        }
     }
 }

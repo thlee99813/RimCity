@@ -26,10 +26,10 @@ public class CharacterTaskController
     private const float HungerEatThreshold = 35f;
     private const float SleepLowThreshold = 20f;
 
-    private const int SleepBedBuildChance = 20;      // 3번 조건
-    private const int HungerBerryGatherChance = 20;  // 4번 조건
-    private const int WeatherPrepChance = 5;         // 5번 조건
-    private const int MissingFocusGatherChance = 45; // 7번 조건(가중)
+    private const int SleepBedBuildChance = 20;      
+    private const int HungerBerryGatherChance = 20;  
+    private const int WeatherPrepChance = 5;        
+    private const int MissingFocusGatherChance = 45; 
 
     private const int ForcedSleepRestTurns = 2;
     private const float ForcedSleepRecoverAmount = 60f;
@@ -431,7 +431,7 @@ public class CharacterTaskController
 
         if (owner.CurrentTileNode == _moveTargetTile)
         {
-            logController.AddLog($"[{smallTurn} 턴] {owner.Data.Name}은/는 보호 구조물 근처에 머뭅니다.");
+            logController.AddLog(TextUtil.ApplyKoreanParticles($"[{smallTurn} 턴] {owner.Data.Name}은/는 보호 구조물 근처에 머뭅니다."));
             _moveTargetTile = null;
             yield break;
         }
@@ -444,7 +444,7 @@ public class CharacterTaskController
         }
 
         int moveCount = Mathf.Min(_maxMoveTilesPerTurn, path.Count);
-        logController.AddLog($"[{smallTurn} 턴] {owner.Data.Name}은/는 보호 구조물 쪽으로 이동합니다. ({moveCount}칸)");
+        logController.AddLog(TextUtil.ApplyKoreanParticles($"[{smallTurn} 턴] {owner.Data.Name}은/는 보호 구조물 쪽으로 이동합니다. ({moveCount}칸)"));
 
         for (int i = 0; i < moveCount; i++)
             yield return owner.MoveToTile(path[i]);
@@ -458,23 +458,24 @@ public class CharacterTaskController
             placedType == StructureType.Bed)
         {
             owner.Status.AddSleep(100f, owner.Data);
-            logController.AddLog($"[{smallTurn} 턴] {owner.Data.Name}은/는 침대에서 잠을 자고 수면을 회복합니다. (+100)");
+            logController.AddLog(TextUtil.ApplyKoreanParticles($"[{smallTurn} 턴] {owner.Data.Name}은/는 침대에서 잠을 자고 수면을 회복합니다. (+100)"));
             return;
         }
         if (_forcedRestTurnsRemaining > 0)
         {
             _forcedRestTurnsRemaining--;
-            logController.AddLog($"[{smallTurn} 턴] {owner.Data.Name}은/는 강제로 잠을 잡니다.");
+            logController.AddLog(TextUtil.ApplyKoreanParticles($"[{smallTurn} 턴] {owner.Data.Name}은/는 강제로 잠을 잡니다."));
 
             if (_forcedRestTurnsRemaining == 0)
             {
                 owner.Status.AddSleep(ForcedSleepRecoverAmount, owner.Data);
-                logController.AddLog($"[{smallTurn} 턴] {owner.Data.Name}은/는 수면이 회복되었습니다. (+{ForcedSleepRecoverAmount})");
+                logController.AddLog(TextUtil.ApplyKoreanParticles($"[{smallTurn} 턴] {owner.Data.Name}은/는 수면이 회복되었습니다. (+{ForcedSleepRecoverAmount})"));
             }
             return;
         }
 
-        logController.AddLog($"[{smallTurn} 턴] {owner.Data.Name}은/는 휴식을 취합니다.");
+            logController.AddLog(TextUtil.ApplyKoreanParticles($"[{smallTurn} 턴] {owner.Data.Name}은/는 휴식을 취합니다."));
+
     }
 
     public void RunEatAction(CharacterEntity owner, int smallTurn, SmallTurnLogController logController, float berryHungerRecoverAmount)

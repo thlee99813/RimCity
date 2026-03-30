@@ -14,6 +14,9 @@ public class TurnManager : Singleton<TurnManager>
     [SerializeField] private float _smallTurnInterval = 1f;
     
     [SerializeField] private float _expandTransitionDelay = 1f;
+
+    [SerializeField] private EncounterEventController _encounterEventController;
+
     private bool _waitExpandTransitionThisTurn;
 
     public int CurrentBigTurn { get; private set; }
@@ -44,7 +47,7 @@ public class TurnManager : Singleton<TurnManager>
             UIManager.Instance.SmallTurnEnd();
 
             yield return StartCoroutine(OpenBigTurnUIAndWait());
-
+            
             if (_waitExpandTransitionThisTurn)
             {
                 _waitExpandTransitionThisTurn = false;
@@ -61,13 +64,21 @@ public class TurnManager : Singleton<TurnManager>
                 yield return new WaitForSeconds(_expandTransitionDelay);
             }
 
-            for (int i = 0; i < _smallTurnsPerBigTurn; i++)
-            {
+           List<CharacterEntity> characters = new List<CharacterEntity>(CharacterManager.Instance.ActiveCharacters);
 
-                CurrentSmallTurn = i + 1;
-                yield return StartCoroutine(RunOneSmallTurn());
-                yield return new WaitForSeconds(_smallTurnInterval);
+            for (int c = 0; c < characters.Count; c++)
+            {
+                CharacterEntity character = characters[c];
+                if (character == null || character.IsDead) continue;
+
+                for (int i = 0; i < _smallTurnsPerBigTurn; i++)
+                {
+                    CurrentSmallTurn = i + 1;
+                    yield return StartCoroutine(RunOneSmallTurnForCharacter(character));
+                    yield return new WaitForSeconds(_smallTurnInterval);
+                }
             }
+
             _smallTurnLogController.ClearLogs();
             CurrentBigTurn++;
             CurrentSmallTurn = 0;
@@ -80,20 +91,7 @@ public class TurnManager : Singleton<TurnManager>
         yield return new WaitUntil(() => _isWaitingSelection == false);
     }
 
-    private IEnumerator RunOneSmallTurn()
-    {
-        List<TileNode> activeNodes = CollectActiveTileNodes();
-        if (activeNodes.Count == 0) yield break;
-
-        for (int i = 0; i < CharacterManager.Instance.ActiveCharacters.Count; i++)
-        {
-            CharacterEntity character = CharacterManager.Instance.ActiveCharacters[i];
-            yield return StartCoroutine(
-                character.RunSmallTurn(_currentSelection, CurrentSmallTurn, activeNodes, _smallTurnLogController)
-            );
-        }
-    }
-
+   
     private List<TileNode> CollectActiveTileNodes()
     {
         List<TileNode> nodes = new List<TileNode>();
@@ -143,4 +141,15 @@ public class TurnManager : Singleton<TurnManager>
             default: return 0f;
         }
     }
+    private IEnumerator RunOneSmallTurnForCharacter(CharacterEntity character)
+    {
+        List<TileNode> activeNodes = CollectActiveTileNodes();
+        if (activeNodes.Count == 0) yield break;
+        if (character == null || character.IsDead) yield break;
+
+        yield return StartCoroutine(
+            character.RunSmallTurn(_currentSelection, CurrentSmallTurn, activeNodes, _smallTurnLogController)
+        );
+    }
+
 }

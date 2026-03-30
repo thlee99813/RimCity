@@ -61,7 +61,7 @@ public static class TextUtil
         return worldEvent switch
         {
             WorldEventType.None => "아무 일도 없음",
-            WorldEventType.Visitor => "방문자 등장",
+            WorldEventType.Visitor => "조우자 방문",
             WorldEventType.Raid => "습격 발생",
             _ => worldEvent.ToString()
         };

@@ -58,21 +58,21 @@ public class CharacterCraftTask
 
         if (_turnsRemaining > 0)
         {
-            log.AddLog($"[{smallTurn} 턴] {owner.Data.Name}은/는 {_recipe.DisplayName} 제작 중입니다. ({_turnsRemaining}턴 남음)");
+            log.AddLog(TextUtil.ApplyKoreanParticles($"[{smallTurn} 턴] {owner.Data.Name}은/는 {_recipe.DisplayName} 제작 중입니다. ({_turnsRemaining}턴 남음)"));
             yield break;
         }
 
         int craftFailChance = GetLowSkillFailChance(craftLevel, _recipe.RecommendedCraftLevel);
         if (craftFailChance > 0 && Random.Range(0, 100) < craftFailChance)
         {
-            log.AddLog($"[{smallTurn} 턴] {owner.Data.Name}은/는 {_recipe.DisplayName}을 제작하다가 손이 삐끗했습니다.");
+            log.AddLog(TextUtil.ApplyKoreanParticles($"[{smallTurn} 턴] {owner.Data.Name}은/는 {_recipe.DisplayName}을 제작하다가 손이 삐끗했습니다."));
             Clear();
             yield break;
         }
 
         ApplyCraftResult(owner, GameManager.Instance.PlayerInventory, _recipe.Id);
 
-        log.AddLog($"[{smallTurn} 턴] {owner.Data.Name}은/는 {_recipe.DisplayName} 제작을 완료했습니다.");
+        log.AddLog(TextUtil.ApplyKoreanParticles($"[{smallTurn} 턴] {owner.Data.Name}은/는 {_recipe.DisplayName} 제작을 완료했습니다."));
         owner.AddStatActionCount(StatType.Craft, 1, smallTurn, log);
 
         Clear();
