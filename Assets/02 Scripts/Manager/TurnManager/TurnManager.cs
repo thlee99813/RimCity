@@ -97,6 +97,7 @@ public class TurnManager : Singleton<TurnManager>
 
 
             _smallTurnLogController.ClearLogs();
+            ApplyYearlyAgingIfNeeded();
             CurrentBigTurn++;
             CurrentSmallTurn = 0;
         }
@@ -184,5 +185,27 @@ public class TurnManager : Singleton<TurnManager>
 
         return "서기 " + year + "년 " + season;
     }
+
+    private void ApplyYearlyAgingIfNeeded()
+    {
+        if (CurrentBigTurn % 4 != 0) return;
+
+        List<CharacterEntity> chars = CharacterManager.Instance.ActiveCharacters;
+        for (int i = 0; i < chars.Count; i++)
+        {
+            CharacterEntity ch = chars[i];
+            if (ch == null || ch.IsDead) continue;
+            if (ch.Data == null) continue;
+
+            ch.Data.Age += 1;
+
+            float newMax = CharacterStatFormula.CalculateMaxHealthByAge(ch.Data.Age);
+            ch.Data.MaxHealth = newMax;
+
+            if (ch.Status.Health > newMax)
+                ch.Status.Health = newMax;
+        }
+    }
+
 
 }

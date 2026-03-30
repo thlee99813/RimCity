@@ -37,7 +37,7 @@ public class CharacterGenerator : MonoBehaviour
             Name = string.IsNullOrWhiteSpace(name) ? "臾대챸" : name,
             Gender = UnityEngine.Random.value < 0.5f ? Gender.Male : Gender.Female,
             Age = age,
-            MaxHealth = CalculateMaxHealthByAge(age),
+            MaxHealth = CharacterStatFormula.CalculateMaxHealthByAge(age),
             MaxMood = 100f
         };
 
@@ -61,22 +61,7 @@ public class CharacterGenerator : MonoBehaviour
         return data;
     }
 
-    private float CalculateMaxHealthByAge(int age)
-    {
-        age = Mathf.Clamp(age, 0, 100);
-
-        // 0??50 -> 35??: 100
-        if (age <= 35)
-        {
-            float t = age / 35f;
-            return Mathf.Lerp(50f, 100f, t);
-        }
-
-        // 35??: 100 -> 100??: 10
-        float t2 = (age - 35f) / 65f;
-        return Mathf.Lerp(100f, 10f, t2);
-    }
-
+    
     public CharacterData CreateEncounterCandidate()
     {
         return CreateRandomCharacter("조우자");
