@@ -84,14 +84,23 @@ public class CharacterBuildTask
             yield break;
         }
 
-        _turnsRemaining--;
+       _turnsRemaining--;
         if (_turnsRemaining > 0)
         {
             log.AddLog($"[{smallTurn} 턴] {owner.Data.Name}은/는 {_recipe.DisplayName} 건설 중입니다. ({_turnsRemaining}턴 남음)");
             yield break;
         }
 
+        int buildFailChance = GetLowSkillFailChance(buildLevel, _recipe.RecommendedBuildLevel);
+        if (buildFailChance > 0 && Random.Range(0, 100) < buildFailChance)
+        {
+            log.AddLog($"[{smallTurn} 턴] {owner.Data.Name}은/는 {_recipe.DisplayName}을 건설하다가 손이 삐끗했습니다.");
+            Clear();
+            yield break;
+        }
+
         GameObject built = Object.Instantiate(_recipe.Prefab, _targetTile.transform);
+
         built.transform.localPosition = Vector3.zero;
         built.transform.localRotation = Quaternion.identity;
         _targetTile.SetStructure(built);
@@ -160,8 +169,6 @@ public class CharacterBuildTask
         }
 
         List<BuildRecipe> candidates = new List<BuildRecipe>();
-        List<int> weights = new List<int>();
-        int total = 0;
 
         for (int i = 0; i < recipes.Length; i++)
         {
@@ -170,25 +177,23 @@ public class CharacterBuildTask
             if (buildLevel < Mathf.Max(1, r.RequiredBuildLevel)) continue;
             if (!CharacterTaskCommon.CanAfford(inv, r.Costs)) continue;
 
-            int rec = Mathf.Max(r.RequiredBuildLevel, r.RecommendedBuildLevel);
-            int w = buildLevel >= rec ? 3 : 1;
-
             candidates.Add(r);
-            weights.Add(w);
-            total += w;
         }
 
         if (candidates.Count == 0) return null;
-
-        int roll = Random.Range(0, total);
-        int acc = 0;
-        for (int i = 0; i < candidates.Count; i++)
-        {
-            acc += weights[i];
-            if (roll < acc) return candidates[i];
-        }
-
-        return candidates[0];
+        return candidates[Random.Range(0, candidates.Count)];
     }
+
+    private int GetLowSkillFailChance(int currentLevel, int recommendedLevel)
+    {
+        int rec = Mathf.Max(1, recommendedLevel);
+        int lv = Mathf.Clamp(currentLevel, 1, 11);
+        int gap = rec - lv;
+
+        if (gap >= 2) return 60;
+        if (gap == 1) return 30;
+        return 0;
+    }
+
 
 }

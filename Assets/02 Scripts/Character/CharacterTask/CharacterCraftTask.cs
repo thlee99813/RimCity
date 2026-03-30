@@ -62,7 +62,16 @@ public class CharacterCraftTask
             yield break;
         }
 
+        int craftFailChance = GetLowSkillFailChance(craftLevel, _recipe.RecommendedCraftLevel);
+        if (craftFailChance > 0 && Random.Range(0, 100) < craftFailChance)
+        {
+            log.AddLog($"[{smallTurn} 턴] {owner.Data.Name}은/는 {_recipe.DisplayName}을 제작하다가 손이 삐끗했습니다.");
+            Clear();
+            yield break;
+        }
+
         ApplyCraftResult(owner, GameManager.Instance.PlayerInventory, _recipe.Id);
+
         log.AddLog($"[{smallTurn} 턴] {owner.Data.Name}은/는 {_recipe.DisplayName} 제작을 완료했습니다.");
         owner.AddStatActionCount(StatType.Craft, 1, smallTurn, log);
 
@@ -144,11 +153,11 @@ public class CharacterCraftTask
             if (craftLevel < Mathf.Max(1, r.RequiredCraftLevel)) continue;
             if (!CharacterTaskCommon.CanAfford(inv, r.Costs)) continue;
 
-            int rec = Mathf.Max(r.RequiredCraftLevel, r.RecommendedCraftLevel);
-            int w = craftLevel >= rec ? 3 : 1;
+            int w = 1;
 
             if (r.Id == ItemIds.Bandage) w += (inv.Bandage <= 0 ? 7 : 2);
             else if (r.Id == ItemIds.Medkit) w += (inv.Medkit <= 0 ? 9 : 2);
+
 
             candidates.Add(r);
             weights.Add(w);
@@ -167,5 +176,16 @@ public class CharacterCraftTask
 
         return candidates[0];
     }
+    private int GetLowSkillFailChance(int currentLevel, int recommendedLevel)
+    {
+        int rec = Mathf.Max(1, recommendedLevel);
+        int lv = Mathf.Clamp(currentLevel, 1, 11);
+        int gap = rec - lv;
+
+        if (gap >= 2) return 60;
+        if (gap == 1) return 30;
+        return 0;
+    }
+
 
     }
