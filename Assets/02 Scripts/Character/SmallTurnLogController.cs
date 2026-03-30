@@ -8,10 +8,13 @@ public class SmallTurnLogController : MonoBehaviour
     [SerializeField] private int _maxLogLines = 5;
 
     private readonly List<string> _logLines = new List<string>();
+    private readonly List<string> _allLogLines = new List<string>();
+
 
     public void AddLog(string line)
     {
         _logLines.Add(line);
+        _allLogLines.Add(line);
 
         if (_logLines.Count > _maxLogLines)
         {
@@ -23,7 +26,13 @@ public class SmallTurnLogController : MonoBehaviour
 
     public void ClearLogs()
     {
-        _logLines.Clear();
-        _smallTurnLogText.text = string.Empty;
+    _logLines.Clear();
+    _allLogLines.Clear();
+    _smallTurnLogText.text = string.Empty;
     }
+    public List<string> GetLogSnapshot()
+    {
+        return new List<string>(_allLogLines);
+    }
+
 }

@@ -49,10 +49,17 @@ public class CharacterBuildTask
                         }
                     }
                 }
+                log.AddLog(TextUtil.ApplyKoreanParticles($"[{smallTurn} 턴] {owner.Data.Name}은/는 건설 가능한 작업이 없습니다."));
+
                 yield break;
             }
             _targetTile = FindNearestBuildableTile(owner.CurrentTileNode, activeNodes);
-            if (_targetTile == null) { Clear(); yield break; }
+            if (_targetTile == null) 
+            { 
+                log.AddLog(TextUtil.ApplyKoreanParticles($"[{smallTurn} 턴] {owner.Data.Name}은/는 건설할 위치를 찾지 못했습니다."));
+
+                Clear(); yield break; 
+            }
 
             CharacterTaskCommon.ConsumeCosts(inv, _recipe.Costs);
             _turnsRemaining = Mathf.Max(1, _recipe.BuildTurns);

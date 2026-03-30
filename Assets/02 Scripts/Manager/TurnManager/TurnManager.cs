@@ -17,6 +17,10 @@ public class TurnManager : Singleton<TurnManager>
 
     [SerializeField] private EncounterEventController _encounterEventController;
 
+    [SerializeField] private TurnResultUI _turnResultUI;
+
+
+
     private bool _waitExpandTransitionThisTurn;
 
     public int CurrentBigTurn { get; private set; }
@@ -66,12 +70,15 @@ public class TurnManager : Singleton<TurnManager>
                 yield return new WaitForSeconds(_expandTransitionDelay);
             }
 
-           List<CharacterEntity> characters = new List<CharacterEntity>(CharacterManager.Instance.ActiveCharacters);
-
+            List<CharacterEntity> characters = new List<CharacterEntity>(CharacterManager.Instance.ActiveCharacters);
+            List<CharacterEntity> reportCharacters = new List<CharacterEntity>();
+            List<List<string>> reportLogs = new List<List<string>>();
             for (int c = 0; c < characters.Count; c++)
             {
                 CharacterEntity character = characters[c];
                 if (character == null || character.IsDead) continue;
+
+                _smallTurnLogController.ClearLogs();
 
                 for (int i = 0; i < _smallTurnsPerBigTurn; i++)
                 {
@@ -79,7 +86,15 @@ public class TurnManager : Singleton<TurnManager>
                     yield return StartCoroutine(RunOneSmallTurnForCharacter(character));
                     yield return new WaitForSeconds(_smallTurnInterval);
                 }
+
+                reportCharacters.Add(character);
+                reportLogs.Add(_smallTurnLogController.GetLogSnapshot());
+                _smallTurnLogController.ClearLogs();
             }
+            UIManager.Instance._ingameTextLog.SetActive(false);
+            yield return StartCoroutine(_turnResultUI.OpenAndWait(reportCharacters, reportLogs));
+            UIManager.Instance._ingameTextLog.SetActive(true);
+
 
             _smallTurnLogController.ClearLogs();
             CurrentBigTurn++;

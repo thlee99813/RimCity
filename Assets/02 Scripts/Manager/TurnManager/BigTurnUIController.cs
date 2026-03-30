@@ -213,7 +213,7 @@ public class BigTurnUIController : MonoBehaviour
 
         int prevCameraIndex = CameraManager.Instance.CurrentCameraIndex;
         ShowOnly(null);
-        CameraManager.Instance.ActivateCamera(0);
+        CameraManager.Instance.ActivateCamera(5);
 
         yield return StartCoroutine(_encounterEventController.RunEncounter());
 

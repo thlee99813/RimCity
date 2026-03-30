@@ -17,11 +17,20 @@ public IEnumerator RunTurn(CharacterEntity owner, int smallTurn, List<TileNode> 
             int gatherLevel = owner.GetStatLevel(StatType.Gather);
 
             ResourceType pick = preferredType;
-            if (pick == ResourceType.None || !IsGatherTargetAllowed(pick, gatherLevel))
-                pick = DecideGatherTargetType(gatherLevel);
+            bool preferredUsable =
+                pick != ResourceType.None &&
+                IsGatherTargetAllowed(pick, gatherLevel) &&
+                HasReachableResourceOfType(owner.CurrentTileNode, activeNodes, pick);
+
+            if (!preferredUsable)
+                pick = DecideGatherTargetType(owner.CurrentTileNode, activeNodes, gatherLevel);
+
+            if (pick == ResourceType.None)
+                yield break;
 
             if (!TryAcquire(owner.CurrentTileNode, activeNodes, pick))
                 yield break;
+
 
             IsForced = true;
         }
@@ -118,15 +127,19 @@ public IEnumerator RunTurn(CharacterEntity owner, int smallTurn, List<TileNode> 
         return false;
     }
 
-    private ResourceType DecideGatherTargetType(int gatherLevel)
+    private ResourceType DecideGatherTargetType(TileNode startTile, List<TileNode> activeNodes, int gatherLevel)
     {
         Dictionary<ResourceType, int> weights = new Dictionary<ResourceType, int>
         {
-            { ResourceType.Berry, 35 },
-            { ResourceType.Tree, 35 },
-            { ResourceType.Grass, gatherLevel >= 4 ? 60 : 0 },
-            { ResourceType.Rock, gatherLevel >= 7 ? 30 : 0 }
+            { ResourceType.Berry, (gatherLevel >= 1 && HasReachableResourceOfType(startTile, activeNodes, ResourceType.Berry)) ? 35 : 0 },
+            { ResourceType.Tree,  (gatherLevel >= 1 && HasReachableResourceOfType(startTile, activeNodes, ResourceType.Tree))  ? 35 : 0 },
+            { ResourceType.Grass, (gatherLevel >= 4 && HasReachableResourceOfType(startTile, activeNodes, ResourceType.Grass)) ? 60 : 0 },
+            { ResourceType.Rock,  (gatherLevel >= 7 && HasReachableResourceOfType(startTile, activeNodes, ResourceType.Rock))  ? 30 : 0 }
         };
+
+        int total = 0;
+        foreach (var kv in weights) total += kv.Value;
+        if (total <= 0) return ResourceType.None;
 
         return WeightedPickResource(weights);
     }
@@ -146,6 +159,25 @@ public IEnumerator RunTurn(CharacterEntity owner, int smallTurn, List<TileNode> 
             if (roll < acc) return e.Key;
         }
         return ResourceType.Berry;
+    }
+    private bool HasReachableResourceOfType(TileNode startTile, List<TileNode> activeNodes, ResourceType type)
+    {
+        if (startTile == null) return false;
+
+        for (int i = 0; i < activeNodes.Count; i++)
+        {
+            TileNode tile = activeNodes[i];
+            if (tile == null) continue;
+            if (tile.ResourceTypeOnTile != type) continue;
+
+            ResourceNode node = tile.ResourceNodeOnTile;
+            if (node == null || node.Amount <= 0 || !node.gameObject.activeInHierarchy) continue;
+
+            List<TileNode> path = CharacterTaskCommon.FindPath(startTile, tile, activeNodes);
+            if (path != null) return true;
+        }
+
+        return false;
     }
 
 

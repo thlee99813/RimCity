@@ -46,6 +46,8 @@ public class CharacterCraftTask
                         }
                     }
                 }
+                log.AddLog(TextUtil.ApplyKoreanParticles($"[{smallTurn} 턴] {owner.Data.Name}은/는 제작 가능한 작업이 없습니다."));
+
                 yield break;
             }
             CharacterTaskCommon.ConsumeCosts(inv, _recipe.Costs);

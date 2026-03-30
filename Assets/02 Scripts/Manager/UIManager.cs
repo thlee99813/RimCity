@@ -11,6 +11,7 @@ public class UIManager : Singleton<UIManager>
         _smallTurnPage.SetActive(false);
         _bigTurnPage.SetActive(false);
         ResultBigChoiceSelect.SetActive(false);
+        _characterReport.SetActive(false);
 
         
 
@@ -22,8 +23,13 @@ public class UIManager : Singleton<UIManager>
     [SerializeField] private GameObject _smallTurnPage;
     [SerializeField] private GameObject _bigTurnPage;
     [SerializeField] private GameObject _ingameBackGround;
+    [SerializeField] private GameObject _characterReport;
+    [SerializeField] public GameObject _ingameTextLog;
+
 
     [SerializeField] public GameObject ResultBigChoiceSelect;
+
+
 
     [Header("Header Slot Spawn")]
 

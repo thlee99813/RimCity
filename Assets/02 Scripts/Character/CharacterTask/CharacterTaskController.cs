@@ -207,16 +207,18 @@ public class CharacterTaskController
         }
 
 
-        // 일반 Brain 선택 + 실행 가능성 검증
+        int gatherLevel = owner.GetStatLevel(StatType.Gather);
         SmallTurnActionType picked = brain.DecideSmallTurnAction(data, status, equipment, inv, selection);
-        return ValidatePickedAction(picked, current, activeNodes, inv);
+        return ValidatePickedAction(picked, current, activeNodes, inv, gatherLevel);
+
     }
 
     private SmallTurnActionType ValidatePickedAction(
         SmallTurnActionType picked,
         TileNode current,
         List<TileNode> activeNodes,
-        PlayerResourceInventory inv)
+        PlayerResourceInventory inv,
+        int gatherLevel)
     {
         if (picked == SmallTurnActionType.Eat)
         {
@@ -227,7 +229,7 @@ public class CharacterTaskController
 
         if (picked == SmallTurnActionType.Gather)
         {
-            if (HasAnyReachableResource(current, activeNodes)) return picked;
+            if (HasAnyReachableResource(current, activeNodes, gatherLevel)) return picked;
             return SmallTurnActionType.Wander;
         }
 
@@ -332,14 +334,15 @@ public class CharacterTaskController
         return true;
     }
 
-    private bool HasAnyReachableResource(TileNode current, List<TileNode> activeNodes)
+    private bool HasAnyReachableResource(TileNode current, List<TileNode> activeNodes, int gatherLevel)
     {
-        if (CharacterTaskCommon.FindNearestReachableResourceTile(current, activeNodes, ResourceType.Berry) != null) return true;
-        if (CharacterTaskCommon.FindNearestReachableResourceTile(current, activeNodes, ResourceType.Tree) != null) return true;
-        if (CharacterTaskCommon.FindNearestReachableResourceTile(current, activeNodes, ResourceType.Rock) != null) return true;
-        if (CharacterTaskCommon.FindNearestReachableResourceTile(current, activeNodes, ResourceType.Grass) != null) return true;
+        if (gatherLevel >= 1 && CharacterTaskCommon.FindNearestReachableResourceTile(current, activeNodes, ResourceType.Berry) != null) return true;
+        if (gatherLevel >= 1 && CharacterTaskCommon.FindNearestReachableResourceTile(current, activeNodes, ResourceType.Tree) != null) return true;
+        if (gatherLevel >= 4 && CharacterTaskCommon.FindNearestReachableResourceTile(current, activeNodes, ResourceType.Grass) != null) return true;
+        if (gatherLevel >= 7 && CharacterTaskCommon.FindNearestReachableResourceTile(current, activeNodes, ResourceType.Rock) != null) return true;
         return false;
     }
+
 
     private bool TrySetGatherFocus(ResourceType type, TileNode current, List<TileNode> activeNodes)
     {
