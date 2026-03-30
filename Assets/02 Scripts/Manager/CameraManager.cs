@@ -15,6 +15,13 @@ public class CameraManager : Singleton<CameraManager>
     public int inactivePriority = 0;
     public int CurrentCameraIndex { get; private set; }
 
+    [SerializeField] private CinemachineCamera _smallTurnCameraFollow;
+
+    [SerializeField] private SmallTurnCameraFollow _smallTurnFollowController;
+
+  
+
+
     void Start()
     {
         ActivateCamera(1);
@@ -34,4 +41,25 @@ public class CameraManager : Singleton<CameraManager>
             cams[i].Priority = (i == index) ? activePriority : inactivePriority;
         }
     }
-}
+
+    
+
+    public void ActivateSmallTurnCamera()
+    {
+        _smallTurnCameraFollow.Priority = activePriority + 10;
+    }
+    public void DeactivateSmallTurnCamera()
+    {
+        _smallTurnCameraFollow.Priority = inactivePriority;
+    }
+
+    public void SetSmallTurnTarget(Transform target)
+    {
+        _smallTurnFollowController.SetTarget(target);
+    }
+
+    public void ClearSmallTurnTarget()
+    {
+        _smallTurnFollowController.ClearTarget();
+    }
+    }

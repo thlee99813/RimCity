@@ -49,7 +49,8 @@ public class TurnManager : Singleton<TurnManager>
         while (true)
         {
             UIManager.Instance.SmallTurnEnd();
-
+            CameraManager.Instance.DeactivateSmallTurnCamera();
+            CameraManager.Instance.ClearSmallTurnTarget();
             yield return StartCoroutine(OpenBigTurnUIAndWait());
             
             if (_waitExpandTransitionThisTurn)
@@ -59,6 +60,7 @@ public class TurnManager : Singleton<TurnManager>
             }
 
             UIManager.Instance.SmallTurnStart();
+
             UIManager.Instance.SetSeasonText(GetSeasonText(CurrentBigTurn));
 
             float weatherHealthDelta = GetWeatherHealthDelta(_currentSelection.Weather);
@@ -79,6 +81,8 @@ public class TurnManager : Singleton<TurnManager>
                 if (character == null || character.IsDead) continue;
 
                 _smallTurnLogController.ClearLogs();
+                CameraManager.Instance.SetSmallTurnTarget(character.transform);
+                CameraManager.Instance.ActivateSmallTurnCamera();
 
                 for (int i = 0; i < _smallTurnsPerBigTurn; i++)
                 {
