@@ -1,13 +1,37 @@
 using UnityEngine;
 using System.Collections.Generic;
-
+using System.Collections;
+using DG.Tweening;
 public class EnemyEntity : MonoBehaviour
 {
     [Header("이동")]
     [SerializeField] private int _maxMoveTilesPerTurn = 4;
     [SerializeField] private int _chaseRangeTiles = 8; // 2턴(4칸 x 2턴)
+    [SerializeField] private float _moveDuration = 0.12f;
+    [SerializeField] private float _maxHealth = 40f;
+    [SerializeField] private float _attackDamage = 8f;
+
+    public float Health { get; private set; }
+    public float AttackDamage => _attackDamage;
+    public bool IsDead { get; private set; }
 
     public TileNode CurrentTileNode { get; private set; }
+
+    private void Awake()
+    {
+        Health = _maxHealth;
+    }
+    public void TakeDamage(float amount)
+    {
+        if (IsDead) return;
+
+        Health = Mathf.Max(0f, Health - amount);
+        if (Health <= 0f)
+        {
+            IsDead = true;
+            Destroy(gameObject);
+        }
+    }
 
     private void OnEnable()
     {
@@ -31,9 +55,9 @@ public class EnemyEntity : MonoBehaviour
         transform.position = p;
     }
 
-    public void RunEnemySmallTurn(List<TileNode> activeNodes, List<CharacterEntity> allyCharacters)
+    public IEnumerator RunEnemySmallTurn(List<TileNode> activeNodes, List<CharacterEntity> allyCharacters)
     {
-        if (activeNodes == null || activeNodes.Count == 0) return;
+        if (activeNodes == null || activeNodes.Count == 0) yield break;
 
         if (CurrentTileNode == null)
             SetCurrentTileNode(GetNearestTile(activeNodes, transform.position));
@@ -43,33 +67,54 @@ public class EnemyEntity : MonoBehaviour
         if (chaseTarget != null && chaseTarget.CurrentTileNode != null)
         {
             List<TileNode> path = CharacterTaskCommon.FindPath(CurrentTileNode, chaseTarget.CurrentTileNode, activeNodes);
-            MoveAlongPath(path, _maxMoveTilesPerTurn);
-            return;
+            yield return MoveAlongPath(path, _maxMoveTilesPerTurn);
+            yield break;
         }
 
-        RunRandomMove(activeNodes);
+        yield return RunRandomMove(activeNodes);
     }
 
-    private void MoveAlongPath(List<TileNode> path, int maxStep)
+    private IEnumerator MoveAlongPath(List<TileNode> path, int maxStep)
     {
-        if (path == null || path.Count == 0) return;
+        if (path == null || path.Count == 0) yield break;
 
         int step = Mathf.Min(maxStep, path.Count);
         for (int i = 0; i < step; i++)
-            SetCurrentTileNode(path[i]);
+        {
+            yield return MoveOneTile(path[i]);
+        }
     }
 
-    private void RunRandomMove(List<TileNode> activeNodes)
+    private IEnumerator RunRandomMove(List<TileNode> activeNodes)
     {
         int steps = Random.Range(1, _maxMoveTilesPerTurn + 1);
 
         for (int i = 0; i < steps; i++)
         {
             TileNode next = GetRandomNeighbor(CurrentTileNode, activeNodes);
-            if (next == null || next == CurrentTileNode) break;
-            SetCurrentTileNode(next);
+            if (next == null || next == CurrentTileNode) yield break;
+
+            yield return MoveOneTile(next);
         }
     }
+
+    private IEnumerator MoveOneTile(TileNode targetNode)
+    {
+        if (EnemyManager.Instance.IsTileOccupiedByOtherEnemy(targetNode, this)) yield break;
+
+        Vector3 target = new Vector3(
+            targetNode.WorldPosition.x,
+            transform.position.y,
+            targetNode.WorldPosition.z
+        );
+
+        Tween tween = transform.DOMove(target, _moveDuration).SetEase(Ease.Linear);
+        yield return tween.WaitForCompletion();
+
+        CurrentTileNode = targetNode;
+    }
+
+
 
     private CharacterEntity FindNearestChaseTarget(List<TileNode> activeNodes, List<CharacterEntity> allyCharacters)
     {
@@ -131,10 +176,12 @@ public class EnemyEntity : MonoBehaviour
             TileNode n = current.Neighbors[i];
             if (n == null) continue;
             if (!activeNodes.Contains(n)) continue;
+            if (EnemyManager.Instance.IsTileOccupiedByOtherEnemy(n, this)) continue;
             candidates.Add(n);
         }
 
         if (candidates.Count == 0) return current;
         return candidates[Random.Range(0, candidates.Count)];
     }
+
 }

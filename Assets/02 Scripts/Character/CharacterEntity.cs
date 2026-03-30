@@ -41,11 +41,17 @@ public class CharacterEntity : MonoBehaviour
     private CharacterNeedsController _needsController;
     private CharacterLifeController _lifeController;
 
+    private CharacterCombatTask _combatTask;
+
+    
+
     private const int StatMaxLevel = 11;
     private const int ActionsPerLevel = 3;
     public TileNode CurrentTileNode => _mover.CurrentTileNode;
     private readonly List<string> _moodHintLines = new List<string>();
     public string MoodHintText => _moodHintLines.Count > 0 ? string.Join("\n", _moodHintLines) : "";
+
+    
 
 
     private void Awake()
@@ -54,6 +60,7 @@ public class CharacterEntity : MonoBehaviour
         _needsController = new CharacterNeedsController(_hungerDeltaPerTurn, _sleepDeltaPerTurn, _funDeltaPerTurn, _healthDeltaWhenStarving);
         _lifeController = new CharacterLifeController();
         _taskController = new CharacterTaskController(_maxMoveTilesPerTurn, _buildRecipes, _craftRecipes);
+        _combatTask = new CharacterCombatTask();
 
     }
     private void OnEnable()
@@ -105,9 +112,9 @@ public class CharacterEntity : MonoBehaviour
 
         if (report.HasAny)
         {
-            if (report.HasTorch) AddMoodHint("횃불에 의해 \n기분이 좋아집니다");
-            if (report.HasCampfire) AddMoodHint("모닥에 의해 \n기분이 좋아집니다");
-            if (report.HasSweatingStone) AddMoodHint("발한석에 의해 \n기분이 좋아집니다");
+            if (report.HasTorch) AddMoodHint("횃불효과 받는중!");
+            if (report.HasCampfire) AddMoodHint("모닥불효과 받는중!");
+            if (report.HasSweatingStone) AddMoodHint("발한석효과 받는중!");
         }
 
         if (Status.Hunger <= 0f)
@@ -116,15 +123,32 @@ public class CharacterEntity : MonoBehaviour
         }
 
         if (_lifeController.TryHandleDeath(this, smallTurn, logController)) yield break;
-
+        if (_taskController.TryRunForcedCombatTurn(this, smallTurn, logController, _combatTask))
+        {
+            if (_lifeController.TryHandleDeath(this, smallTurn, logController)) yield break;
+            yield break;
+        }
         SmallTurnActionType action = _taskController.ResolveAction(this, Data, Status, Equipment, selection, activeNodes, _brain);
-
+        
         if (action == SmallTurnActionType.MoveToShelter)
         {
             yield return _taskController.RunMoveToShelterTurn(this, smallTurn, activeNodes, logController);
             if (_lifeController.TryHandleDeath(this, smallTurn, logController)) yield break;
             yield break;
         }
+        if (action == SmallTurnActionType.MoveToAllyCombat)
+        {
+            yield return _taskController.RunMoveToAllyCombatTurn(this, smallTurn, activeNodes, logController);
+            if (_lifeController.TryHandleDeath(this, smallTurn, logController)) yield break;
+            yield break;
+        }
+        if (action == SmallTurnActionType.MoveToEnemyCombat)
+        {
+            yield return _taskController.RunMoveToEnemyCombatTurn(this, smallTurn, activeNodes, logController);
+            if (_lifeController.TryHandleDeath(this, smallTurn, logController)) yield break;
+            yield break;
+        }
+
 
         if (action == SmallTurnActionType.Rest)
         {

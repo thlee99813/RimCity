@@ -60,6 +60,8 @@ public class TurnManager : Singleton<TurnManager>
             }
 
             UIManager.Instance.SmallTurnStart();
+            AllyCombatSupportManager.Instance.ClearReports();
+
 
             UIManager.Instance.SetSeasonText(GetSeasonText(CurrentBigTurn));
 
@@ -95,6 +97,10 @@ public class TurnManager : Singleton<TurnManager>
                 reportLogs.Add(_smallTurnLogController.GetLogSnapshot());
                 _smallTurnLogController.ClearLogs();
             }
+            List<TileNode> enemyActiveNodes = CollectActiveTileNodes();
+            List<CharacterEntity> enemyTargets = new List<CharacterEntity>(CharacterManager.Instance.ActiveCharacters);
+            yield return StartCoroutine(EnemyManager.Instance.RunEnemyPhase(_smallTurnsPerBigTurn, enemyActiveNodes, enemyTargets));
+
             UIManager.Instance._ingameTextLog.SetActive(false);
             yield return StartCoroutine(_turnResultUI.OpenAndWait(reportCharacters, reportLogs));
             UIManager.Instance._ingameTextLog.SetActive(true);

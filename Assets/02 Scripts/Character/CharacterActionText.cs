@@ -13,6 +13,7 @@ public static class CharacterActionText
             case SmallTurnActionType.Rest: return "잠시 휴식을 취합니다.";
             case SmallTurnActionType.Eat: return "음식을 찾아 먹습니다.";
             case SmallTurnActionType.MoveToShelter: return "보호 구조물 쪽으로 이동합니다.";
+            case SmallTurnActionType.MoveToAllyCombat: return "아군 전투를 지원하기 위해 이동합니다.";
 
             default: return "무언가를 고민합니다.";
         }

@@ -13,6 +13,11 @@ public class CharacterTaskController
     private readonly CharacterCraftTask _craftTask = new CharacterCraftTask();
     private readonly CharacterItemUseTask _itemUseTask = new CharacterItemUseTask();
     private readonly CharacterSocialTask _socialTask = new CharacterSocialTask();
+    private TileNode _enemyCombatTargetTile;
+
+    private const int EnemySeekRangeTurns = 1;         
+    private const int EnemySeekChanceDefault = 6;      
+    private const int EnemySeekChanceCombatFirst = 30;
 
 
     private ResourceType _nextGatherType = ResourceType.None;
@@ -37,6 +42,8 @@ public class CharacterTaskController
     private const float ForcedSleepRecoverAmount = 60f;
 
     private const int BedReachableTurns = 2;
+    private TileNode _allyCombatTargetTile;
+    private const int AllyCombatSupportRangeTurns = 2;
 
 
     public CharacterTaskController(int maxMoveTilesPerTurn, BuildRecipe[] buildRecipes, CraftRecipe[] craftRecipes)
@@ -57,6 +64,40 @@ public class CharacterTaskController
     {
         PlayerResourceInventory inv = GameManager.Instance.PlayerInventory;
         TileNode current = owner.CurrentTileNode;
+
+        int buildLevel = owner.GetStatLevel(StatType.Build);
+        int craftLevel = owner.GetStatLevel(StatType.Craft);
+        int combatLevel = owner.GetStatLevel(StatType.Combat);
+
+        TileNode enemyTile = FindNearestEnemyTile(
+            current,
+            activeNodes,
+            _maxMoveTilesPerTurn * EnemySeekRangeTurns);
+
+        if (enemyTile != null)
+        {
+            int seekChance = EnemySeekChanceDefault + combatLevel;
+            if (selection.Policy == PolicyType.CombatFirst)
+                seekChance = EnemySeekChanceCombatFirst;
+
+            if (Random.Range(0, 100) < seekChance)
+            {
+                _enemyCombatTargetTile = enemyTile;
+                if (current != enemyTile)
+                    return SmallTurnActionType.MoveToEnemyCombat;
+            }
+        }
+
+        TileNode supportTile = AllyCombatSupportManager.Instance.FindNearestCombatTile(current, activeNodes, _maxMoveTilesPerTurn * AllyCombatSupportRangeTurns);
+
+        if (supportTile != null)
+        {
+            _allyCombatTargetTile = supportTile;
+
+            if (current != supportTile)
+                return SmallTurnActionType.MoveToAllyCombat;
+        }
+
 
         if (_forcedRestTurnsRemaining > 0) return SmallTurnActionType.Rest;
         if (status.Sleep <= 0f)
@@ -91,7 +132,7 @@ public class CharacterTaskController
             if (Random.Range(0, 100) < SleepBedBuildChance)
             {
                 ResourceType bedMissing = ResourceType.None;
-                if (TryPrepareBuild("bed", inv, out bedMissing))
+                if (TryPrepareBuild("bed", inv, buildLevel, out bedMissing))
                     return SmallTurnActionType.Build;
 
                 if (TrySetGatherFocusForMissing(bedMissing, current, activeNodes))
@@ -125,10 +166,10 @@ public class CharacterTaskController
             ResourceType fanMissing = ResourceType.None;
             bool fanReady = false;
             if (equipment.Utility != UtilityType.Fan)
-                fanReady = TryPrepareCraft(ItemIds.Fan, inv, out fanMissing);
+            fanReady = TryPrepareCraft(ItemIds.Fan, inv, craftLevel, out fanMissing);
 
             ResourceType coolMissing = ResourceType.None;
-            bool stoneReady = TryPrepareBuild("coldStone", inv, out coolMissing);
+            bool stoneReady = TryPrepareBuild("coldStone", inv, buildLevel, out coolMissing);
 
             if (Random.Range(0, 100) < WeatherPrepChance)
             {
@@ -157,10 +198,10 @@ public class CharacterTaskController
             ResourceType clothMissing = ResourceType.None;
             bool clothReady = false;
             if (equipment.Armor != ArmorType.Cloth)
-                clothReady = TryPrepareCraft(ItemIds.Cloth, inv, out clothMissing);
+            clothReady = TryPrepareCraft(ItemIds.Cloth, inv, craftLevel, out clothMissing);
 
             ResourceType warmMissing = ResourceType.None;
-            bool warmReady = TryPrepareAnyWarmBuild(inv, out warmMissing);
+            bool warmReady = TryPrepareAnyWarmBuild(inv, buildLevel, out warmMissing);
 
             if (Random.Range(0, 100) < WeatherPrepChance)
             {
@@ -212,16 +253,18 @@ public class CharacterTaskController
 
         int gatherLevel = owner.GetStatLevel(StatType.Gather);
         SmallTurnActionType picked = brain.DecideSmallTurnAction(data, status, equipment, inv, selection);
-        return ValidatePickedAction(picked, current, activeNodes, inv, gatherLevel);
+        return ValidatePickedAction(picked, current, activeNodes, inv, gatherLevel, buildLevel, craftLevel);
 
     }
 
     private SmallTurnActionType ValidatePickedAction(
-        SmallTurnActionType picked,
-        TileNode current,
-        List<TileNode> activeNodes,
-        PlayerResourceInventory inv,
-        int gatherLevel)
+    SmallTurnActionType picked,
+    TileNode current,
+    List<TileNode> activeNodes,
+    PlayerResourceInventory inv,
+    int gatherLevel,
+    int buildLevel,
+    int craftLevel)
     {
         if (picked == SmallTurnActionType.Eat)
         {
@@ -238,14 +281,15 @@ public class CharacterTaskController
 
         if (picked == SmallTurnActionType.Build)
         {
-            if (TryPrepareAnyBuild(inv)) return SmallTurnActionType.Build;
+            if (TryPrepareAnyBuild(inv, buildLevel)) return SmallTurnActionType.Build;
+
             if (TrySetGatherFocus(_missingFocusType, current, activeNodes)) return SmallTurnActionType.Gather;
             return SmallTurnActionType.Wander;
         }
 
         if (picked == SmallTurnActionType.Craft)
         {
-            if (TryPrepareAnyCraft(inv)) return SmallTurnActionType.Craft;
+            if (TryPrepareAnyCraft(inv, craftLevel)) return SmallTurnActionType.Craft;
             if (TrySetGatherFocus(_missingFocusType, current, activeNodes)) return SmallTurnActionType.Gather;
             return SmallTurnActionType.Wander;
         }
@@ -263,7 +307,7 @@ public class CharacterTaskController
         return missing == ResourceType.None;
     }
 
-    private bool TryPrepareBuild(string recipeId, PlayerResourceInventory inv, out ResourceType missing)
+    private bool TryPrepareBuild(string recipeId, PlayerResourceInventory inv, int buildLevel, out ResourceType missing)
     {
         missing = ResourceType.None;
         BuildRecipe recipe = FindBuildRecipe(recipeId);
@@ -271,22 +315,23 @@ public class CharacterTaskController
 
         missing = CharacterTaskCommon.GetFirstMissingResource(inv, recipe.Costs);
         if (missing != ResourceType.None) return false;
+        if (buildLevel < Mathf.Max(1, recipe.RequiredBuildLevel)) return false;
 
         _nextBuildRecipeId = recipeId;
         return true;
     }
 
-    private bool TryPrepareAnyWarmBuild(PlayerResourceInventory inv, out ResourceType missing)
+    private bool TryPrepareAnyWarmBuild(PlayerResourceInventory inv, int buildLevel, out ResourceType missing)
     {
         missing = ResourceType.None;
 
-        if (TryPrepareBuild("campfire", inv, out missing)) return true;
-        if (TryPrepareBuild("torch", inv, out missing)) return true;
+        if (TryPrepareBuild("campfire", inv, buildLevel, out missing)) return true;
+        if (TryPrepareBuild("torch", inv, buildLevel, out missing)) return true;
 
         return false;
     }
 
-    private bool TryPrepareCraft(string recipeId, PlayerResourceInventory inv, out ResourceType missing)
+    private bool TryPrepareCraft(string recipeId, PlayerResourceInventory inv, int craftLevel, out ResourceType missing)
     {
         missing = ResourceType.None;
         CraftRecipe recipe = FindCraftRecipe(recipeId);
@@ -294,12 +339,13 @@ public class CharacterTaskController
 
         missing = CharacterTaskCommon.GetFirstMissingResource(inv, recipe.Costs);
         if (missing != ResourceType.None) return false;
+        if (craftLevel < Mathf.Max(1, recipe.RequiredCraftLevel)) return false;
 
         _nextCraftRecipeId = recipeId;
         return true;
     }
 
-    private bool TryPrepareAnyBuild(PlayerResourceInventory inv)
+    private bool TryPrepareAnyBuild(PlayerResourceInventory inv, int buildLevel)
     {
         if (_buildRecipes == null || _buildRecipes.Length == 0) return false;
 
@@ -309,6 +355,7 @@ public class CharacterTaskController
         {
             BuildRecipe r = _buildRecipes[i];
             if (r == null || r.Prefab == null) continue;
+            if (buildLevel < Mathf.Max(1, r.RequiredBuildLevel)) continue;
             if (!CharacterTaskCommon.CanAfford(inv, r.Costs)) continue;
             affordable.Add(r);
         }
@@ -318,7 +365,8 @@ public class CharacterTaskController
         return true;
     }
 
-    private bool TryPrepareAnyCraft(PlayerResourceInventory inv)
+
+    private bool TryPrepareAnyCraft(PlayerResourceInventory inv, int craftLevel)
     {
         if (_craftRecipes == null || _craftRecipes.Length == 0) return false;
 
@@ -328,6 +376,7 @@ public class CharacterTaskController
         {
             CraftRecipe r = _craftRecipes[i];
             if (r == null) continue;
+            if (craftLevel < Mathf.Max(1, r.RequiredCraftLevel)) continue;
             if (!CharacterTaskCommon.CanAfford(inv, r.Costs)) continue;
             affordable.Add(r);
         }
@@ -336,6 +385,7 @@ public class CharacterTaskController
         _nextCraftRecipeId = affordable[Random.Range(0, affordable.Count)].Id;
         return true;
     }
+
 
     private bool HasAnyReachableResource(TileNode current, List<TileNode> activeNodes, int gatherLevel)
     {
@@ -519,5 +569,144 @@ public class CharacterTaskController
         int socialLevel = owner.GetStatLevel(StatType.Social);
         yield return _socialTask.RunTurn(owner, smallTurn, activeNodes, logController, _maxMoveTilesPerTurn, socialLevel);
     }
+    public bool TryRunForcedCombatTurn(
+    CharacterEntity owner,
+    int smallTurn,
+    SmallTurnLogController logController,
+    CharacterCombatTask combatTask)
+    {
+        EnemyEntity enemyOnTile = EnemyManager.Instance.GetEnemyOnTile(owner.CurrentTileNode);
+        if (enemyOnTile == null) return false;
+        AllyCombatSupportManager.Instance.ReportCombatTile(owner.CurrentTileNode);
+
+
+        PlayerResourceInventory inventory = GameManager.Instance.PlayerInventory;
+
+        if (owner.Status.Sleep <= 0f)
+        {
+            RunRestTurn(owner, smallTurn, logController);
+            combatTask.ApplyEnemyRetaliation(owner, enemyOnTile, smallTurn, logController);
+            return true;
+        }
+
+        if (owner.Status.Health <= owner.Data.MaxHealth * 0.3f && inventory.Medkit > 0)
+        {
+            RunUseMedkitTurn(owner, smallTurn, logController);
+            combatTask.ApplyEnemyRetaliation(owner, enemyOnTile, smallTurn, logController);
+            return true;
+        }
+
+        if (owner.Status.Health <= owner.Data.MaxHealth * 0.5f && inventory.Bandage > 0)
+        {
+            RunUseBandageTurn(owner, smallTurn, logController);
+            combatTask.ApplyEnemyRetaliation(owner, enemyOnTile, smallTurn, logController);
+            return true;
+        }
+
+        combatTask.RunAttackExchange(owner, enemyOnTile, smallTurn, logController);
+        return true;
+    }
+    public IEnumerator RunMoveToAllyCombatTurn(
+    CharacterEntity owner,
+    int smallTurn,
+    List<TileNode> activeNodes,
+    SmallTurnLogController logController)
+    {
+        if (_allyCombatTargetTile == null || !activeNodes.Contains(_allyCombatTargetTile))
+        {
+            _allyCombatTargetTile = null;
+            yield break;
+        }
+
+        if (owner.CurrentTileNode == _allyCombatTargetTile)
+        {
+            _allyCombatTargetTile = null;
+            yield break;
+        }
+
+        List<TileNode> path = CharacterTaskCommon.FindPath(owner.CurrentTileNode, _allyCombatTargetTile, activeNodes);
+        if (path == null || path.Count == 0)
+        {
+            _allyCombatTargetTile = null;
+            yield break;
+        }
+
+        int moveCount = Mathf.Min(_maxMoveTilesPerTurn, path.Count);
+        logController.AddLog(TextUtil.ApplyKoreanParticles(
+            $"[{smallTurn} 턴] {owner.Data.Name}은/는 아군 전투를 지원하기 위해 이동합니다. ({moveCount}칸)"));
+
+        for (int i = 0; i < moveCount; i++)
+            yield return owner.MoveToTile(path[i]);
+    }
+    private TileNode FindNearestEnemyTile(TileNode from, List<TileNode> activeNodes, int maxSteps)
+{
+    if (from == null || activeNodes == null) return null;
+
+    TileNode best = null;
+    int bestSteps = int.MaxValue;
+
+    for (int i = 0; i < activeNodes.Count; i++)
+    {
+        TileNode tile = activeNodes[i];
+        if (tile == null) continue;
+
+        EnemyEntity enemy = EnemyManager.Instance.GetEnemyOnTile(tile);
+        if (enemy == null || enemy.IsDead) continue;
+
+        List<TileNode> path = CharacterTaskCommon.FindPath(from, tile, activeNodes);
+        if (path == null) continue;
+
+        int steps = path.Count;
+        if (steps > maxSteps) continue;
+
+        if (steps < bestSteps)
+        {
+            bestSteps = steps;
+            best = tile;
+        }
+    }
+
+    return best;
+}
+
+public IEnumerator RunMoveToEnemyCombatTurn(
+    CharacterEntity owner,
+    int smallTurn,
+    List<TileNode> activeNodes,
+    SmallTurnLogController logController)
+{
+    if (_enemyCombatTargetTile == null || !activeNodes.Contains(_enemyCombatTargetTile))
+    {
+        _enemyCombatTargetTile = null;
+        yield break;
+    }
+
+    EnemyEntity enemy = EnemyManager.Instance.GetEnemyOnTile(_enemyCombatTargetTile);
+    if (enemy == null || enemy.IsDead)
+    {
+        _enemyCombatTargetTile = null;
+        yield break;
+    }
+
+    if (owner.CurrentTileNode == _enemyCombatTargetTile)
+        yield break;
+
+    List<TileNode> path = CharacterTaskCommon.FindPath(owner.CurrentTileNode, _enemyCombatTargetTile, activeNodes);
+    if (path == null || path.Count == 0)
+    {
+        _enemyCombatTargetTile = null;
+        yield break;
+    }
+
+    int moveCount = Mathf.Min(_maxMoveTilesPerTurn, path.Count);
+    logController.AddLog(TextUtil.ApplyKoreanParticles(
+        $"[{smallTurn} 턴] {owner.Data.Name}은/는 적을 찾아 전투하러 이동합니다. ({moveCount}칸)"));
+
+    for (int i = 0; i < moveCount; i++)
+        yield return owner.MoveToTile(path[i]);
+}
+
+
+
 
 }

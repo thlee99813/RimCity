@@ -13,5 +13,9 @@ public enum SmallTurnActionType
     EquipFan,
     UseBandage,
     UseMedkit,
-    MoveToShelter
+    MoveToShelter,
+    MoveToAllyCombat,
+    MoveToEnemyCombat
+
+
 }

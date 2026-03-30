@@ -30,13 +30,11 @@ public class CharacterBrain
         if (selection.Policy == PolicyType.CraftFirst) weights[SmallTurnActionType.Craft] += PolicyBonus;
         if (selection.Policy == PolicyType.BuildFirst) weights[SmallTurnActionType.Build] += PolicyBonus;
         if (selection.Policy == PolicyType.SocialFirst) weights[SmallTurnActionType.Social] += PolicyBonus;
-        if (selection.Policy == PolicyType.CombatFirst) weights[SmallTurnActionType.Wander] += PolicyBonus;
 
         weights[SmallTurnActionType.Gather] += GetStatBonus(data, StatType.Gather);
         weights[SmallTurnActionType.Craft] += GetStatBonus(data, StatType.Craft);
         weights[SmallTurnActionType.Build] += GetStatBonus(data, StatType.Build);
         weights[SmallTurnActionType.Social] += GetStatBonus(data, StatType.Social);
-        weights[SmallTurnActionType.Wander] += GetStatBonus(data, StatType.Combat);
 
         if (inventory.Bandage <= 0) weights[SmallTurnActionType.Craft] += 2;
         if (inventory.Medkit <= 0)  weights[SmallTurnActionType.Craft] += 4;
@@ -44,13 +42,13 @@ public class CharacterBrain
 
 
         if (inventory.WoodenSpear > 0 && equipment.Weapon != WeaponType.WoodenSpear)
-            weights[SmallTurnActionType.EquipWoodenSpear] = 12;
+            weights[SmallTurnActionType.EquipWoodenSpear] = 48;
 
         if (inventory.StoneSpear > 0 && equipment.Weapon != WeaponType.StoneSpear)
-            weights[SmallTurnActionType.EquipStoneSpear] = 16;
+            weights[SmallTurnActionType.EquipStoneSpear] = 64;
 
         if (inventory.Fan > 0 && equipment.Utility != UtilityType.Fan)
-            weights[SmallTurnActionType.EquipFan] = 10;
+            weights[SmallTurnActionType.EquipFan] = 40;
 
         if (status.Health <= data.MaxHealth * 0.5f && inventory.Bandage > 0)
             weights[SmallTurnActionType.UseBandage] = 120;
