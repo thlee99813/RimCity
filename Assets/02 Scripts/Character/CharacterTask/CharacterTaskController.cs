@@ -111,7 +111,11 @@ public class CharacterTaskController
         if (_craftTask.IsForced) return SmallTurnActionType.Craft;
         if (_socialTask.IsForced) return SmallTurnActionType.Social;
 
-
+        if (TryGetRaidTargetTile(activeNodes, out TileNode raidTargetTile))
+        {
+            if (current != raidTargetTile)
+                return SmallTurnActionType.MoveToGeneratorRaid;
+        }
         if (status.Sleep < SleepLowThreshold)
         {
             // 2턴(8타일) 내 침대 우선
@@ -153,7 +157,7 @@ public class CharacterTaskController
             }
         }
 
-        if (selection.Weather == WeatherType.Hot || selection.Weather == WeatherType.Heatwave || selection.Weather == WeatherType.Drought)
+        if (selection.Weather == WeatherType.Heatwave)        
         {
             TileNode coolTile = CharacterTaskCommon.FindNearestReachableStructureTile(
                 current, activeNodes, _maxMoveTilesPerTurn, StructureType.SweatingStone);
@@ -184,7 +188,7 @@ public class CharacterTaskController
             
         }
 
-        if (selection.Weather == WeatherType.Cold || selection.Weather == WeatherType.ExtremeCold)
+        if (selection.Weather == WeatherType.ExtremeCold)
         {
             TileNode warmTile = CharacterTaskCommon.FindNearestReachableStructureTile(
                 current, activeNodes, _maxMoveTilesPerTurn, StructureType.Campfire, StructureType.Torch);
@@ -576,8 +580,22 @@ public class CharacterTaskController
     CharacterCombatTask combatTask)
     {
         EnemyEntity enemyOnTile = EnemyManager.Instance.GetEnemyOnTile(owner.CurrentTileNode);
-        if (enemyOnTile == null) return false;
+        EnemyGenerator generatorOnTile = EnemyGenerator.FindOnTile(owner.CurrentTileNode);
+
+        if (enemyOnTile == null && generatorOnTile == null) return false;
+
+        if (enemyOnTile == null && generatorOnTile != null)
+        {
+            if (RaidDirectiveManager.Instance == null) return false;
+            if (!RaidDirectiveManager.Instance.TryGetTarget(out EnemyGenerator raidTarget)) return false;
+            if (generatorOnTile != raidTarget) return false;
+
+            combatTask.RunAttackGenerator(owner, generatorOnTile, smallTurn, logController);
+            return true;
+        }
+
         AllyCombatSupportManager.Instance.ReportCombatTile(owner.CurrentTileNode);
+
 
 
         PlayerResourceInventory inventory = GameManager.Instance.PlayerInventory;
@@ -639,35 +657,35 @@ public class CharacterTaskController
             yield return owner.MoveToTile(path[i]);
     }
     private TileNode FindNearestEnemyTile(TileNode from, List<TileNode> activeNodes, int maxSteps)
-{
-    if (from == null || activeNodes == null) return null;
-
-    TileNode best = null;
-    int bestSteps = int.MaxValue;
-
-    for (int i = 0; i < activeNodes.Count; i++)
     {
-        TileNode tile = activeNodes[i];
-        if (tile == null) continue;
+        if (from == null || activeNodes == null) return null;
 
-        EnemyEntity enemy = EnemyManager.Instance.GetEnemyOnTile(tile);
-        if (enemy == null || enemy.IsDead) continue;
+        TileNode best = null;
+        int bestSteps = int.MaxValue;
 
-        List<TileNode> path = CharacterTaskCommon.FindPath(from, tile, activeNodes);
-        if (path == null) continue;
-
-        int steps = path.Count;
-        if (steps > maxSteps) continue;
-
-        if (steps < bestSteps)
+        for (int i = 0; i < activeNodes.Count; i++)
         {
-            bestSteps = steps;
-            best = tile;
-        }
-    }
+            TileNode tile = activeNodes[i];
+            if (tile == null) continue;
 
-    return best;
-}
+            EnemyEntity enemy = EnemyManager.Instance.GetEnemyOnTile(tile);
+            if (enemy == null || enemy.IsDead) continue;
+
+            List<TileNode> path = CharacterTaskCommon.FindPath(from, tile, activeNodes);
+            if (path == null) continue;
+
+            int steps = path.Count;
+            if (steps > maxSteps) continue;
+
+            if (steps < bestSteps)
+            {
+                bestSteps = steps;
+                best = tile;
+            }
+        }
+
+        return best;
+    }
 
 public IEnumerator RunMoveToEnemyCombatTurn(
     CharacterEntity owner,
@@ -701,6 +719,43 @@ public IEnumerator RunMoveToEnemyCombatTurn(
     int moveCount = Mathf.Min(_maxMoveTilesPerTurn, path.Count);
     logController.AddLog(TextUtil.ApplyKoreanParticles(
         $"[{smallTurn} 턴] {owner.Data.Name}은/는 적을 찾아 전투하러 이동합니다. ({moveCount}칸)"));
+
+    for (int i = 0; i < moveCount; i++)
+        yield return owner.MoveToTile(path[i]);
+}
+private bool TryGetRaidTargetTile(List<TileNode> activeNodes, out TileNode targetTile)
+{
+    targetTile = null;
+
+    if (RaidDirectiveManager.Instance == null) return false;
+    if (!RaidDirectiveManager.Instance.TryGetTarget(out EnemyGenerator targetGenerator)) return false;
+    if (targetGenerator.GeneratorTile == null) return false;
+    if (!activeNodes.Contains(targetGenerator.GeneratorTile)) return false;
+
+    targetTile = targetGenerator.GeneratorTile;
+    return true;
+}
+
+public IEnumerator RunMoveToGeneratorRaidTurn(
+    CharacterEntity owner,
+    int smallTurn,
+    List<TileNode> activeNodes,
+    SmallTurnLogController logController)
+{
+    if (!TryGetRaidTargetTile(activeNodes, out TileNode targetTile))
+        yield break;
+
+    if (owner.CurrentTileNode == targetTile)
+        yield break;
+
+    List<TileNode> path = CharacterTaskCommon.FindPath(owner.CurrentTileNode, targetTile, activeNodes);
+    if (path == null || path.Count == 0)
+        yield break;
+
+    int moveCount = Mathf.Min(_maxMoveTilesPerTurn, path.Count);
+    
+    logController.AddLog(TextUtil.ApplyKoreanParticles(
+        $"[{smallTurn} 턴] {owner.Data.Name}은/는 적 생성기를 공격하기 위해 이동합니다. ({moveCount}칸)"));
 
     for (int i = 0; i < moveCount; i++)
         yield return owner.MoveToTile(path[i]);

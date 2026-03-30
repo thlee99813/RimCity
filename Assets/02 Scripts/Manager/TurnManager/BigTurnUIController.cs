@@ -22,6 +22,9 @@ public class BigTurnUIController : MonoBehaviour
 
     [SerializeField] private GameObject _expandYesButton;
 
+    private EnemyGenerator[] _eventRaidTargets = new EnemyGenerator[0];
+    private string _selectedRaidTargetId;
+
 
     private int _openedBigTurnIndex;
 
@@ -59,7 +62,7 @@ public class BigTurnUIController : MonoBehaviour
         {
             bool active = i < _eventOptions.Length;
             _eventOptionButtons[i].SetActive(active);
-            if (active) _eventOptionTexts[i].text = TextUtil.TranslateKorean(_eventOptions[i]);
+            if (active) _eventOptionTexts[i].text = GetEventOptionLabel(i);
         }
         RefreshExpandYesButton();
 
@@ -90,7 +93,9 @@ public class BigTurnUIController : MonoBehaviour
             Policy = _selectedPolicy,
             Weather = _selectedWeather,
             EventType = _selectedEvent,
-            ExpandTerritory = _selectedExpand
+            ExpandTerritory = _selectedExpand,
+            RaidTargetGeneratorId = _selectedRaidTargetId
+
         };
 
         TurnManager.Instance.ApplyBigTurnSelection(selection);
@@ -147,23 +152,44 @@ public class BigTurnUIController : MonoBehaviour
 
     private WorldEventType[] BuildEventOptions(int bigTurnIndex)
     {
-        List<WorldEventType> options = new List<WorldEventType>(4);
+        List<WorldEventType> typeList = new List<WorldEventType>(4);
+        List<EnemyGenerator> raidTargets = new List<EnemyGenerator>(4);
 
-        // Visitor는 강제 턴에만
         if (IsVisitorForcedTurn(bigTurnIndex))
-            options.Add(WorldEventType.Visitor);
+        {
+            typeList.Add(WorldEventType.Visitor);
+            raidTargets.Add(null);
+        }
 
-        // 다른 조건 이벤트들 (추가 예정)
-        // if (ConditionA(bigTurnIndex)) options.Add(WorldEventType.X);
+        List<EnemyGenerator> activeGenerators = EnemyGenerator.GetActiveGeneratorsSnapshot();
+        for (int i = 0; i < activeGenerators.Count; i++)
+        {
+            typeList.Add(WorldEventType.Raid);
+            raidTargets.Add(activeGenerators[i]);
+        }
 
-        if (options.Count == 0)
-            options.Add(WorldEventType.None);
+        int maxOptions = _eventOptionTexts.Length;
+        int maxNonNone = Mathf.Max(0, maxOptions - 1);
 
-        if (options.Count > 4)
-            options.RemoveRange(4, options.Count - 4);
+        if (typeList.Count > maxNonNone)
+        {
+            typeList.RemoveRange(maxNonNone, typeList.Count - maxNonNone);
+            raidTargets.RemoveRange(maxNonNone, raidTargets.Count - maxNonNone);
+        }
 
-        return options.ToArray();
+        typeList.Add(WorldEventType.None);
+        raidTargets.Add(null);
+
+        if (typeList.Count > maxOptions)
+        {
+            typeList.RemoveRange(maxOptions, typeList.Count - maxOptions);
+            raidTargets.RemoveRange(maxOptions, raidTargets.Count - maxOptions);
+        }
+
+        _eventRaidTargets = raidTargets.ToArray();
+        return typeList.ToArray();
     }
+
 
 
     private void ShowOnly(GameObject panel)
@@ -189,6 +215,13 @@ public class BigTurnUIController : MonoBehaviour
     public void SelectEvent(int optionIndex)
     {
         _selectedEvent = _eventOptions[optionIndex];
+        _selectedRaidTargetId = null;
+
+        if (_selectedEvent == WorldEventType.Raid)
+        {
+            EnemyGenerator raidTarget = (optionIndex < _eventRaidTargets.Length) ? _eventRaidTargets[optionIndex] : null;
+            _selectedRaidTargetId = raidTarget != null ? raidTarget.GeneratorId : null;
+        }
 
         if (_selectedEvent == WorldEventType.Visitor)
         {
@@ -199,6 +232,7 @@ public class BigTurnUIController : MonoBehaviour
 
         ShowOnly(_expandPanel);
     }
+
 
 
     public void SelectExpand(bool value)
@@ -234,6 +268,20 @@ public class BigTurnUIController : MonoBehaviour
     {
         return bigTurnIndex >= 1 && ((bigTurnIndex - 1) % 3 == 0);
     }
+    private string GetEventOptionLabel(int index)
+    {
+        WorldEventType type = _eventOptions[index];
+
+        if (type == WorldEventType.Raid)
+        {
+            EnemyGenerator target = (index < _eventRaidTargets.Length) ? _eventRaidTargets[index] : null;
+            if (target != null) return $"{target.GeneratorName} 부족 습격";
+            return "적 부족 습격";
+        }
+
+        return TextUtil.TranslateKorean(type);
+    }
+
     
 
 }

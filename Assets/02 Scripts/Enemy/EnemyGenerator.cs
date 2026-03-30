@@ -12,13 +12,35 @@ public class EnemyGenerator : MonoBehaviour
     [SerializeField] private float _spawnYOffset = 0f;
     [SerializeField] private bool _avoidEnemyOverlap = true;
 
-    [Header("Interval (BigTurn)")]
+    [Header("Interval")]
     [SerializeField] private bool _spawnOnEnable = true;
     [SerializeField] private int _spawnEveryBigTurns = 3; // 활성화 이후 N턴마다
 
     [Header("Spawned Enemy Stats")]
     [SerializeField] private float _spawnEnemyHealth = 40f;
     [SerializeField] private float _spawnEnemyAttack = 8f;
+    [Header("Generator")]
+    [SerializeField] private TileNode _generatorTile;       // 생성기 위치 타일
+    [SerializeField] private float _maxHealth = 200f;
+    [SerializeField] private bool _destroyOnDeath = false;  // true면 Destroy(gameObject)
+
+    [Header("Identity")]
+    [SerializeField] private string _generatorId;
+    [SerializeField] private string _generatorName = "적 생성기";
+
+    public string GeneratorId => _generatorId;
+    public string GeneratorName => string.IsNullOrWhiteSpace(_generatorName) ? name : _generatorName;
+
+
+    public float CurrentHealth => _currentHealth;
+    public bool IsDestroyed => _isDestroyed;
+    public TileNode GeneratorTile => _generatorTile;
+
+    private float _currentHealth;
+    private bool _isDestroyed;
+
+    private static readonly List<EnemyGenerator> _activeGenerators = new List<EnemyGenerator>();
+
 
     private StageContext _stage;
     private int _activatedBigTurn;
@@ -27,11 +49,22 @@ public class EnemyGenerator : MonoBehaviour
 
     private void Awake()
     {
+        if (string.IsNullOrEmpty(_generatorId))
+        _generatorId = Guid.NewGuid().ToString("N");
         _stage = GetComponentInParent<StageContext>();
+        _currentHealth = Mathf.Max(1f, _maxHealth);
+
+        if (_generatorTile == null && _stage != null && _stage.TileNodes != null && _stage.TileNodes.Length > 0)
+            _generatorTile = FindNearestTile(_stage.TileNodes, transform.position);
     }
 
     private void OnEnable()
     {
+        if (_isDestroyed) return;
+
+        if (!_activeGenerators.Contains(this))
+            _activeGenerators.Add(this);
+
         TryBindEvent();
 
         _activatedBigTurn = GetCurrentBigTurn();
@@ -49,6 +82,12 @@ public class EnemyGenerator : MonoBehaviour
 
     private void OnDisable()
     {
+        _activeGenerators.Remove(this);
+        if (GeneratorName == "코마")
+        {
+            UIManager.Instance.ShowKomaEnding();
+        }
+
         if (!_isBound) return;
         if (EventManager.Instance == null) return;
 
@@ -67,6 +106,8 @@ public class EnemyGenerator : MonoBehaviour
 
     private void OnBigTurnStarted(MEventType type, Component sender, EventArgs args)
     {
+        if (_isDestroyed) return;
+
         BigTurnStartedEventArgs turnArgs = args as BigTurnStartedEventArgs;
         if (turnArgs == null) return;
 
@@ -99,6 +140,8 @@ public class EnemyGenerator : MonoBehaviour
 
     private void SpawnWave()
     {
+        if (_isDestroyed) return;
+
         if (_enemyPrefab == null) return;
 
         TileNode[] tiles = GetSourceTiles();
@@ -147,4 +190,103 @@ public class EnemyGenerator : MonoBehaviour
 
         return null;
     }
+    public bool TakeDamage(float amount)
+    {
+        if (_isDestroyed) return false;
+        if (amount <= 0f) return false;
+
+        _currentHealth = Mathf.Max(0f, _currentHealth - amount);
+
+        if (_currentHealth <= 0f)
+        {
+            DestroyGenerator();
+            return true;
+        }
+
+        return false;
+    }
+
+    private void DestroyGenerator()
+    {
+        if (_isDestroyed) return;
+        _isDestroyed = true;
+
+        if (_isBound && EventManager.Instance != null)
+        {
+            EventManager.Instance.RemoveListener(MEventType.BigTurnStarted, this);
+            _isBound = false;
+        }
+
+        _activeGenerators.Remove(this);
+
+        if (_destroyOnDeath) Destroy(gameObject);
+        else gameObject.SetActive(false);
+    }
+
+    public static EnemyGenerator FindOnTile(TileNode tile)
+    {
+        if (tile == null) return null;
+
+        for (int i = 0; i < _activeGenerators.Count; i++)
+        {
+            EnemyGenerator gen = _activeGenerators[i];
+            if (gen == null) continue;
+            if (gen._isDestroyed) continue;
+            if (gen._generatorTile == tile) return gen;
+        }
+
+        return null;
+    }
+
+    private TileNode FindNearestTile(TileNode[] tiles, Vector3 worldPos)
+    {
+        TileNode best = null;
+        float bestSqr = float.MaxValue;
+
+        for (int i = 0; i < tiles.Length; i++)
+        {
+            TileNode n = tiles[i];
+            if (n == null) continue;
+
+            float sqr = (n.WorldPosition - worldPos).sqrMagnitude;
+            if (sqr < bestSqr)
+            {
+                bestSqr = sqr;
+                best = n;
+            }
+        }
+
+        return best;
+    }
+    public static List<EnemyGenerator> GetActiveGeneratorsSnapshot()
+{
+    List<EnemyGenerator> result = new List<EnemyGenerator>();
+
+    for (int i = 0; i < _activeGenerators.Count; i++)
+    {
+        EnemyGenerator gen = _activeGenerators[i];
+        if (gen == null) continue;
+        if (gen._isDestroyed) continue;
+        result.Add(gen);
+    }
+
+    return result;
+}
+
+    public static EnemyGenerator FindById(string generatorId)
+    {
+        if (string.IsNullOrEmpty(generatorId)) return null;
+
+        for (int i = 0; i < _activeGenerators.Count; i++)
+        {
+            EnemyGenerator gen = _activeGenerators[i];
+            if (gen == null) continue;
+            if (gen._isDestroyed) continue;
+            if (gen._generatorId == generatorId) return gen;
+        }
+
+        return null;
+    }
+
+
 }

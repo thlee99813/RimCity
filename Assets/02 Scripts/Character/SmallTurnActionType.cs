@@ -15,7 +15,8 @@ public enum SmallTurnActionType
     UseMedkit,
     MoveToShelter,
     MoveToAllyCombat,
-    MoveToEnemyCombat
+    MoveToEnemyCombat,
+    MoveToGeneratorRaid
 
 
 }

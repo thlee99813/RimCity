@@ -39,7 +39,7 @@ public class UIManager : Singleton<UIManager>
 
     [SerializeField] private TMP_Text _seasonText;
 
-
+    [SerializeField] private GameObject _endingPanel;
     private readonly List<CharacterHeaderSlotUI> _spawnedSlots = new List<CharacterHeaderSlotUI>();
 
 
@@ -80,6 +80,11 @@ public class UIManager : Singleton<UIManager>
     public void SetSeasonText(string text)
     {
         _seasonText.text = text;
+    }
+    public void ShowKomaEnding()
+    {
+        _endingPanel.SetActive(true);
+        Time.timeScale = 0f;
     }
 
     

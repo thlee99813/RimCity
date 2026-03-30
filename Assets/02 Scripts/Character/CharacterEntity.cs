@@ -142,6 +142,12 @@ public class CharacterEntity : MonoBehaviour
             if (_lifeController.TryHandleDeath(this, smallTurn, logController)) yield break;
             yield break;
         }
+        if (action == SmallTurnActionType.MoveToGeneratorRaid)
+        {
+            yield return _taskController.RunMoveToGeneratorRaidTurn(this, smallTurn, activeNodes, logController);
+            if (_lifeController.TryHandleDeath(this, smallTurn, logController)) yield break;
+            yield break;
+        }
         if (action == SmallTurnActionType.MoveToEnemyCombat)
         {
             yield return _taskController.RunMoveToEnemyCombatTurn(this, smallTurn, activeNodes, logController);

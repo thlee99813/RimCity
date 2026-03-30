@@ -6,6 +6,8 @@ public class BigTurnSelectionData
     public WeatherType Weather;
     public WorldEventType EventType;
     public bool ExpandTerritory;
+    public string RaidTargetGeneratorId;
+
 
     public static BigTurnSelectionData Default()
     {
@@ -14,7 +16,9 @@ public class BigTurnSelectionData
             Policy = PolicyType.GatherFirst,
             Weather = WeatherType.Mild,
             EventType = WorldEventType.None,
-            ExpandTerritory = false
+            ExpandTerritory = false,
+            RaidTargetGeneratorId = null
+
         };
     }
 }

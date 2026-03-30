@@ -81,7 +81,7 @@ public class StageManager : Singleton<StageManager>
                 SetStageActive(8, true);
                 break;
             default:
-                int chunkIndex = step - (FixedPatternSteps + 1); // step5 -> 0
+                int chunkIndex = step - (FixedPatternSteps + 1);
                 int start = DynamicStartIndex + chunkIndex * DynamicChunkSize;
                 int end = Mathf.Min(start + DynamicChunkSize - 1, GetDynamicEndIndex());
 

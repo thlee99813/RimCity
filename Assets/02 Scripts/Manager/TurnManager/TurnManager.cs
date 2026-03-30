@@ -146,6 +146,15 @@ public class TurnManager : Singleton<TurnManager>
             if (expanded)
                 _waitExpandTransitionThisTurn = true;
         }
+        if (selection.EventType == WorldEventType.Raid)
+        {
+            EnemyGenerator target = EnemyGenerator.FindById(selection.RaidTargetGeneratorId);
+            RaidDirectiveManager.Instance.SetTarget(target);
+        }
+        else
+        {
+            RaidDirectiveManager.Instance.ClearTarget();
+        }
 
         // 나중에 정책/날씨/이벤트/확장 실제 적용
         /*Debug.Log(
