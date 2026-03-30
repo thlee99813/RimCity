@@ -8,9 +8,14 @@ public class CharacterLifeController
         if (owner.Status.Health > 0f) return false;
 
         owner.MarkDead();
+        if (CharacterManager.Instance.GetAliveCount() <= 0)
+        {
+            UIManager.Instance.ShowGameOver();
+        }
         logController.AddLog(TextUtil.ApplyKoreanParticles($"[{smallTurn} 턴] {owner.Data.Name}은/는 죽었습니다."));
         UIManager.Instance.RemoveCharacterSlot(owner.Data.Id);
         Object.Destroy(owner.gameObject);
         return true;
     }
+
 }

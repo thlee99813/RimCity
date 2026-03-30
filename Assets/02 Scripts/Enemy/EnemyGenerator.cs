@@ -27,7 +27,11 @@ public class EnemyGenerator : MonoBehaviour
     [Header("Identity")]
     [SerializeField] private string _generatorId;
     [SerializeField] private string _generatorName = "적 생성기";
-
+    [ContextMenu("Debug/200 데미지")]
+    private void DebugTakeDamage200()
+    {
+        TakeDamage(200f);
+    }
     public string GeneratorId => _generatorId;
     public string GeneratorName => string.IsNullOrWhiteSpace(_generatorName) ? name : _generatorName;
 
@@ -219,9 +223,15 @@ public class EnemyGenerator : MonoBehaviour
 
         _activeGenerators.Remove(this);
 
+        if (GeneratorName == "코마" && UIManager.Instance != null)
+        {
+            UIManager.Instance.ShowKomaEnding();
+        }
+
         if (_destroyOnDeath) Destroy(gameObject);
         else gameObject.SetActive(false);
     }
+
 
     public static EnemyGenerator FindOnTile(TileNode tile)
     {

@@ -1,6 +1,7 @@
 using UnityEngine;
 using TMPro;
 using System.Collections.Generic;
+using System.Collections;
 
 public class UIManager : Singleton<UIManager>
 {
@@ -12,6 +13,9 @@ public class UIManager : Singleton<UIManager>
         _bigTurnPage.SetActive(false);
         ResultBigChoiceSelect.SetActive(false);
         _characterReport.SetActive(false);
+        _endingPanel.SetActive(false);
+        _gameOverPanel.SetActive(false);
+
 
         
 
@@ -40,6 +44,16 @@ public class UIManager : Singleton<UIManager>
     [SerializeField] private TMP_Text _seasonText;
 
     [SerializeField] private GameObject _endingPanel;
+    [SerializeField] private TMP_Text _endingResultText;
+    [SerializeField] private GameObject _gameOverPanel;
+    [SerializeField] private TMP_Text _gameOverText;
+    [SerializeField] private float _endingTypeInterval = 0.03f;
+
+    private Coroutine _endingTypeRoutine;
+    private bool _endingShown;
+    private Coroutine _gameOverTypeRoutine;
+    private bool _gameOverShown;
+
     private readonly List<CharacterHeaderSlotUI> _spawnedSlots = new List<CharacterHeaderSlotUI>();
 
 
@@ -83,9 +97,81 @@ public class UIManager : Singleton<UIManager>
     }
     public void ShowKomaEnding()
     {
+        if (_endingShown) return;
+        _endingShown = true;
+
         _endingPanel.SetActive(true);
+
+        string endingText = BuildKomaEndingText();
+
+        if (_endingTypeRoutine != null) StopCoroutine(_endingTypeRoutine);
+        _endingTypeRoutine = StartCoroutine(TypeTextRoutine(_endingResultText, endingText, _endingTypeInterval));
+
+    }
+    private string BuildKomaEndingText()
+    {
+        string survivorNames = BuildSurvivorNames();
+        int clearTurn = (TurnManager.Instance != null) ? TurnManager.Instance.CurrentBigTurn : 0;
+
+        return
+            "멸망을 막은 부족민 : " + survivorNames + "\n" +
+            "클리어하는데 걸린 턴 : " + clearTurn;
+    }
+    private string BuildSurvivorNames()
+    {
+        List<string> names = new List<string>();
+
+        if (CharacterManager.Instance != null)
+        {
+            List<CharacterEntity> chars = CharacterManager.Instance.ActiveCharacters;
+            for (int i = 0; i < chars.Count; i++)
+            {
+                CharacterEntity ch = chars[i];
+                if (ch == null || ch.IsDead) continue;
+                if (ch.Data == null || string.IsNullOrWhiteSpace(ch.Data.Name)) continue;
+                names.Add(ch.Data.Name);
+            }
+        }
+
+        return names.Count > 0 ? string.Join(", ", names) : "없음";
+    }
+
+    private IEnumerator TypeTextRoutine(TMP_Text target, string fullText, float interval)
+    {
+        target.text = "";
+
+        for (int i = 0; i < fullText.Length; i++)
+        {
+            target.text += fullText[i];
+            yield return new WaitForSecondsRealtime(interval);
+        }
+    }
+    public void ShowGameOver()
+    {
+        if (_gameOverShown) return;
+        _gameOverShown = true;
+
+        _gameOverPanel.SetActive(true);
+
+        int clearTurn = (TurnManager.Instance != null) ? TurnManager.Instance.CurrentBigTurn : 0;
+        string text = "부족이 전멸했습니다.\n" + "버틴 턴 : " + clearTurn;
+
+        if (_gameOverTypeRoutine != null) StopCoroutine(_gameOverTypeRoutine);
+        _gameOverTypeRoutine = StartCoroutine(TypeTextRealtime(_gameOverText, text, _endingTypeInterval));
+
         Time.timeScale = 0f;
     }
+
+    private IEnumerator TypeTextRealtime(TMP_Text target, string fullText, float interval)
+    {
+        target.text = "";
+        for (int i = 0; i < fullText.Length; i++)
+        {
+            target.text += fullText[i];
+            yield return new WaitForSecondsRealtime(interval);
+        }
+    }
+
 
     
 }

@@ -19,4 +19,16 @@ public class CharacterManager : Singleton<CharacterManager>
     {
         ActiveCharacters.Remove(character);
     }
+    public int GetAliveCount()
+    {
+        int alive = 0;
+        for (int i = 0; i < ActiveCharacters.Count; i++)
+        {
+            CharacterEntity ch = ActiveCharacters[i];
+            if (ch == null || ch.IsDead) continue;
+            alive++;
+        }
+        return alive;
+    }
+
 }
