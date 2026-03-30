@@ -1,8 +1,8 @@
 ﻿public enum MEventType
 {
 
-  Stageactivated
-
+  Stageactivated,
+  BigTurnStarted
     
     
 }

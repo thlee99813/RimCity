@@ -60,6 +60,7 @@ public class TurnManager : Singleton<TurnManager>
             }
 
             UIManager.Instance.SmallTurnStart();
+            EventManager.Instance.PostNotification(MEventType.BigTurnStarted, this, new BigTurnStartedEventArgs(CurrentBigTurn));
             AllyCombatSupportManager.Instance.ClearReports();
 
 

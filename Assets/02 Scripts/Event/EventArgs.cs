@@ -10,4 +10,14 @@ public class StageActivatedEventArgs : EventArgs
         StageContext = stageContext;
     }
 }
+[Serializable]
+public class BigTurnStartedEventArgs : EventArgs
+{
+    public int BigTurn;
+    public BigTurnStartedEventArgs(int bigTurn)
+    {
+        BigTurn = bigTurn;
+    }
+}
+
 

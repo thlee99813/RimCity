@@ -31,6 +31,13 @@ public class EnemyEntity : MonoBehaviour
             IsDead = true;
             Destroy(gameObject);
         }
+        
+    }
+    public void InitializeStats(float maxHealth, float attackDamage)
+    {
+        _maxHealth = Mathf.Max(1f, maxHealth);
+        _attackDamage = Mathf.Max(0f, attackDamage);
+        Health = _maxHealth;
     }
 
     private void OnEnable()
@@ -71,8 +78,9 @@ public class EnemyEntity : MonoBehaviour
             yield break;
         }
 
-        yield return RunRandomMove(activeNodes);
-    }
+        RunRandomStepInstant(activeNodes);
+        yield break;    
+        }
 
     private IEnumerator MoveAlongPath(List<TileNode> path, int maxStep)
     {
@@ -97,6 +105,14 @@ public class EnemyEntity : MonoBehaviour
             yield return MoveOneTile(next);
         }
     }
+    private void RunRandomStepInstant(List<TileNode> activeNodes)
+    {
+        TileNode next = GetRandomNeighbor(CurrentTileNode, activeNodes);
+        if (next == null || next == CurrentTileNode) return;
+
+        SetCurrentTileNode(next);
+    }
+
 
     private IEnumerator MoveOneTile(TileNode targetNode)
     {
