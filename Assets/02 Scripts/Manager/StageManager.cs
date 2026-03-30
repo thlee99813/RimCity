@@ -4,6 +4,11 @@ public class StageManager : Singleton<StageManager>
 {
 
     private int _expandStep  = 0;
+    private const int FixedPatternSteps = 4;   
+    private const int DynamicStartIndex = 9;     
+    private const int DynamicChunkSize = 9;   
+    private const int DynamicLastIndex = 80;  
+    private const int DynamicCameraIndex = 5;   
 
     protected override void Init()
     {
@@ -42,8 +47,8 @@ public class StageManager : Singleton<StageManager>
 
     public bool ExpandOneStep()
     {
-        if (_expandStep >= 4) return false;
-
+        int maxStep = GetMaxExpandStep();
+        if (_expandStep >= maxStep) return false;
         _expandStep++;
         ApplyExpandStep(_expandStep);
         return true;
@@ -75,9 +80,48 @@ public class StageManager : Singleton<StageManager>
                 SetStageActive(7, true);
                 SetStageActive(8, true);
                 break;
+            default:
+                int chunkIndex = step - (FixedPatternSteps + 1); // step5 -> 0
+                int start = DynamicStartIndex + chunkIndex * DynamicChunkSize;
+                int end = Mathf.Min(start + DynamicChunkSize - 1, GetDynamicEndIndex());
+
+                CameraManager.Instance.ActivateCamera(GetDynamicCameraIndex(step));
+                ActivateRange(start, end);
+                break;
             
         }
     }
+    private int GetDynamicEndIndex()
+    {
+        if (Stages == null || Stages.Length == 0) return -1;
+        return Mathf.Min(DynamicLastIndex, Stages.Length - 1);
+    }
+
+    private int GetMaxExpandStep()
+    {
+        int end = GetDynamicEndIndex();
+        if (end < DynamicStartIndex) return FixedPatternSteps;
+
+        int count = end - DynamicStartIndex + 1;
+        int chunks = Mathf.CeilToInt(count / (float)DynamicChunkSize);
+        return FixedPatternSteps + chunks;
+    }
+
+    private void ActivateRange(int start, int end)
+    {
+        if (end < start) return;
+
+        for (int i = start; i <= end; i++)
+            SetStageActive(i, true);
+    }
+    private int GetDynamicCameraIndex(int step)
+    {
+        if (step <= 7) return 6; 
+        if (step <= 9) return 7; 
+        return 8;             
+    }
+
+
 
 
 
