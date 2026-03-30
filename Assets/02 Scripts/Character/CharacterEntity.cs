@@ -23,7 +23,7 @@ public class CharacterEntity : MonoBehaviour
     [Header("매턴 배고픔, 수면, 재미, 배고픔에 따른 체력 변화량")]
     [SerializeField] private float _hungerDeltaPerTurn = -3f;
     [SerializeField] private float _sleepDeltaPerTurn = -2f;
-    [SerializeField] private float _funDeltaPerTurn = -4f;
+    [SerializeField] private float _funDeltaPerTurn = -2f;
     [SerializeField] private float _healthDeltaWhenStarving = -5f;
 
 
@@ -36,6 +36,9 @@ public class CharacterEntity : MonoBehaviour
 
     [Header("제작 레시피")]
     [SerializeField] private CraftRecipe[] _craftRecipes;
+    [Header("기분 0 페널티")]
+    [SerializeField] private float _moodZeroDamageMultiplier = 1.2f;
+
 
     private CharacterMover _mover;
     private CharacterNeedsController _needsController;
@@ -57,7 +60,8 @@ public class CharacterEntity : MonoBehaviour
     private void Awake()
     {
         _mover = new CharacterMover(transform, _moveDuration);
-        _needsController = new CharacterNeedsController(_hungerDeltaPerTurn, _sleepDeltaPerTurn, _funDeltaPerTurn, _healthDeltaWhenStarving);
+        _needsController = new CharacterNeedsController(_hungerDeltaPerTurn, _sleepDeltaPerTurn, _funDeltaPerTurn, 
+        _healthDeltaWhenStarving, _moodZeroDamageMultiplier);       
         _lifeController = new CharacterLifeController();
         _taskController = new CharacterTaskController(_maxMoveTilesPerTurn, _buildRecipes, _craftRecipes);
         _combatTask = new CharacterCombatTask();

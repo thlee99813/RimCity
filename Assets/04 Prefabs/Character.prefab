@@ -71,7 +71,7 @@ MonoBehaviour:
   _maxMoveTilesPerTurn: 4
   _hungerDeltaPerTurn: -3
   _sleepDeltaPerTurn: -2
-  _funDeltaPerTurn: -4
+  _funDeltaPerTurn: -2
   _healthDeltaWhenStarving: -5
   _berryHungerRecoverAmount: 20
   _buildRecipes:
@@ -166,6 +166,7 @@ MonoBehaviour:
       Amount: 1
     RequiredCraftLevel: 4
     RecommendedCraftLevel: 6
+  _moodZeroDamageMultiplier: 1.2
 --- !u!1 &1210877690648096331
 GameObject:
   m_ObjectHideFlags: 0

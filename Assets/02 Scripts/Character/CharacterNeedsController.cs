@@ -7,6 +7,8 @@ public class CharacterNeedsController
     private readonly float _sleepDeltaPerTurn;
     private readonly float _funDeltaPerTurn;
     private readonly float _healthDeltaWhenStarving;
+    private readonly float _moodZeroDamageMultiplier;
+
     public struct StructureEffectReport
     {
         public bool HasTorch;
@@ -18,13 +20,20 @@ public class CharacterNeedsController
         public bool HasAny => HasTorch || HasCampfire || HasSweatingStone;
     }
 
-    public CharacterNeedsController(float hungerDeltaPerTurn, float sleepDeltaPerTurn, float funDeltaPerTurn, float healthDeltaWhenStarving)
-    {
-        _hungerDeltaPerTurn = hungerDeltaPerTurn;
-        _sleepDeltaPerTurn = sleepDeltaPerTurn;
-        _funDeltaPerTurn = funDeltaPerTurn;
-        _healthDeltaWhenStarving = healthDeltaWhenStarving;
-    }  
+    public CharacterNeedsController(
+    float hungerDeltaPerTurn,
+    float sleepDeltaPerTurn,
+    float funDeltaPerTurn,
+    float healthDeltaWhenStarving,
+    float moodZeroDamageMultiplier)
+{
+    _hungerDeltaPerTurn = hungerDeltaPerTurn;
+    _sleepDeltaPerTurn = sleepDeltaPerTurn;
+    _funDeltaPerTurn = funDeltaPerTurn;
+    _healthDeltaWhenStarving = healthDeltaWhenStarving;
+    _moodZeroDamageMultiplier = Mathf.Max(1f, moodZeroDamageMultiplier);
+}
+  
 
     public StructureEffectReport Tick (CharacterStatus status, CharacterData data, CharacterEquipment equipment, WeatherType weather, TileNode currentTile, List<TileNode> activeNodes)    
     {
@@ -76,10 +85,19 @@ public class CharacterNeedsController
                 weatherHealthDelta *= equipment.GetColdDamageMultiplier() * envColdMul;
         }
 
-        status.AddHealth(weatherHealthDelta, data);
+        float totalHealthDelta = 0f;
+
+        if (weatherHealthDelta < 0f)
+            totalHealthDelta += weatherHealthDelta;
 
         if (status.Hunger <= 0f)
-            status.AddHealth(_healthDeltaWhenStarving, data);
+            totalHealthDelta += _healthDeltaWhenStarving;
+
+        if (status.Mood <= 0f && totalHealthDelta < 0f)
+            totalHealthDelta *= _moodZeroDamageMultiplier;
+
+        if (totalHealthDelta != 0f)
+            status.AddHealth(totalHealthDelta, data);
 
         return new StructureEffectReport
         {
