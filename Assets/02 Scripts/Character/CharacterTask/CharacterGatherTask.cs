@@ -10,16 +10,14 @@ public class CharacterGatherTask
     private TileNode _targetTile;
     private ResourceType _targetType = ResourceType.None;
 
-    public IEnumerator RunTurn(CharacterEntity owner, int smallTurn, List<TileNode> activeNodes, SmallTurnLogController log, int maxMoveTilesPerTurn)
+public IEnumerator RunTurn(CharacterEntity owner, int smallTurn, List<TileNode> activeNodes, SmallTurnLogController log, int maxMoveTilesPerTurn, ResourceType preferredType = ResourceType.None)
     {
         if (!IsForced)
         {
-            ResourceType pick = DecideGatherTargetType();
+            ResourceType pick = preferredType != ResourceType.None ? preferredType : DecideGatherTargetType();
             if (!TryAcquire(owner.CurrentTileNode, activeNodes, pick))
-            {
-                log.AddLog($"[{smallTurn} 턴] {owner.Data.Name}은/는 수집 대상을 찾지 못합니다.");
                 yield break;
-            }
+
             IsForced = true;
         }
 

@@ -27,6 +27,10 @@ public class CharacterBrain
         if (selection.Policy == PolicyType.BuildFirst) weights[SmallTurnActionType.Build] += 20;
         if (selection.Policy == PolicyType.SocialFirst) weights[SmallTurnActionType.Social] += 20;
         if (selection.Policy == PolicyType.CombatFirst) weights[SmallTurnActionType.Wander] += 15;
+        if (inventory.Bandage <= 0) weights[SmallTurnActionType.Craft] += 2;
+        if (inventory.Medkit <= 0)  weights[SmallTurnActionType.Craft] += 4;
+
+
 
         if (inventory.WoodenSpear > 0 && equipment.Weapon != WeaponType.WoodenSpear)
             weights[SmallTurnActionType.EquipWoodenSpear] = 12;

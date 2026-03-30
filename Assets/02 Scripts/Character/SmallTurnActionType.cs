@@ -1,19 +1,17 @@
-using UnityEngine;
-
 public enum SmallTurnActionType
 {
-    Idle, 
-    Wander, 
-    Gather, 
-    Craft, 
-    Build, 
-    Social, 
-    Rest, 
+    Idle,
+    Wander,
+    Gather,
+    Craft,
+    Build,
+    Social,
+    Rest,
     Eat,
     EquipWoodenSpear,
     EquipStoneSpear,
     EquipFan,
     UseBandage,
-    UseMedkit
+    UseMedkit,
+    MoveToShelter
 }
-

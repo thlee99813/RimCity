@@ -120,7 +120,22 @@ public class CharacterEntity : MonoBehaviour
 
         if (_lifeController.TryHandleDeath(this, smallTurn, logController)) yield break;
 
-        SmallTurnActionType action = _taskController.ResolveAction(Data, Status, Equipment, selection, _brain);
+        SmallTurnActionType action = _taskController.ResolveAction(this, Data, Status, Equipment, selection, activeNodes, _brain);
+
+        if (action == SmallTurnActionType.MoveToShelter)
+        {
+            yield return _taskController.RunMoveToShelterTurn(this, smallTurn, activeNodes, logController);
+            if (_lifeController.TryHandleDeath(this, smallTurn, logController)) yield break;
+            yield break;
+        }
+
+        if (action == SmallTurnActionType.Rest)
+        {
+            _taskController.RunRestTurn(this, smallTurn, logController);
+            if (_lifeController.TryHandleDeath(this, smallTurn, logController)) yield break;
+            yield break;
+        }
+
 
         if (action == SmallTurnActionType.Gather)
         {

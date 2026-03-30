@@ -1,5 +1,6 @@
 using System.Collections;
 using UnityEngine;
+using System.Collections.Generic;
 
 public class CharacterCraftTask
 {
@@ -8,34 +9,48 @@ public class CharacterCraftTask
     private CraftRecipe _recipe;
     private int _turnsRemaining;
 
-    public IEnumerator RunTurn(CharacterEntity owner, int smallTurn, SmallTurnLogController log, CraftRecipe[] recipes)
+    public bool LastFailedByMissingResource { get; private set; }
+    public ResourceType LastMissingResourceType { get; private set; } = ResourceType.None;
+
+
+    public IEnumerator RunTurn(
+        CharacterEntity owner,
+        int smallTurn,
+        SmallTurnLogController log,
+        CraftRecipe[] recipes,
+        string forcedRecipeId = null)    
     {
         if (!IsForced)
         {
-            if (recipes == null || recipes.Length == 0)
-            {
-                log.AddLog($"[{smallTurn} 턴] 제작 레시피가 없습니다.");
-                yield break;
-            }
+            LastFailedByMissingResource = false;
+            LastMissingResourceType = ResourceType.None;
 
-            _recipe = recipes[Random.Range(0, recipes.Length)];
-            if (_recipe == null)
-            {
-                log.AddLog($"[{smallTurn} 턴] 제작 레시피가 비어 있습니다.");
-                yield break;
-            }
+            if (recipes == null || recipes.Length == 0) yield break;
 
             PlayerResourceInventory inv = GameManager.Instance.PlayerInventory;
-            if (!CharacterTaskCommon.CanAfford(inv, _recipe.Costs))
+            _recipe = PickStartRecipe(recipes, inv, forcedRecipeId);
+
+            if (_recipe == null)
             {
-                log.AddLog($"[{smallTurn} 턴] {owner.Data.Name}은/는 재료가 부족합니다.");
+                if (!string.IsNullOrEmpty(forcedRecipeId))
+                {
+                    CraftRecipe desired = FindRecipeById(recipes, forcedRecipeId);
+                    if (desired != null)
+                    {
+                        ResourceType miss = CharacterTaskCommon.GetFirstMissingResource(inv, desired.Costs);
+                        if (miss != ResourceType.None)
+                        {
+                            LastFailedByMissingResource = true;
+                            LastMissingResourceType = miss;
+                        }
+                    }
+                }
                 yield break;
             }
-
             CharacterTaskCommon.ConsumeCosts(inv, _recipe.Costs);
-
             _turnsRemaining = Mathf.Max(1, _recipe.CraftTurns);
             IsForced = true;
+
         }
 
         _turnsRemaining--;
@@ -92,4 +107,64 @@ public class CharacterCraftTask
         _recipe = null;
         _turnsRemaining = 0;
     }
-}
+    private CraftRecipe FindRecipeById(CraftRecipe[] recipes, string id)
+    {
+        for (int i = 0; i < recipes.Length; i++)
+        {
+            CraftRecipe r = recipes[i];
+            if (r == null) continue;
+            if (r.Id == id) return r;
+        }
+        return null;
+    }
+
+    private CraftRecipe PickStartRecipe(CraftRecipe[] recipes, PlayerResourceInventory inv, string forcedRecipeId)
+    {
+        if (!string.IsNullOrEmpty(forcedRecipeId))
+        {
+            CraftRecipe forced = FindRecipeById(recipes, forcedRecipeId);
+            if (forced == null) return null;
+            if (!CharacterTaskCommon.CanAfford(inv, forced.Costs)) return null;
+            return forced;
+        }
+
+        List<CraftRecipe> affordable = new List<CraftRecipe>();
+        for (int i = 0; i < recipes.Length; i++)
+        {
+            CraftRecipe r = recipes[i];
+            if (r == null) continue;
+            if (!CharacterTaskCommon.CanAfford(inv, r.Costs)) continue;
+            affordable.Add(r);
+        }
+
+        if (affordable.Count == 0) return null;
+        int total = 0;
+        List<int> recipeWeights = new List<int>(affordable.Count);
+
+        for (int i = 0; i < affordable.Count; i++)
+        {
+            CraftRecipe r = affordable[i];
+            int w = 1;
+
+            if (r.Id == ItemIds.Bandage)
+                w = inv.Bandage <= 0 ? 10 : 3;
+            else if (r.Id == ItemIds.Medkit)
+                w = inv.Medkit <= 0 ? 12 : 3;
+
+            recipeWeights.Add(w);
+            total += w;
+        }
+
+        int roll = Random.Range(0, total);
+        int acc = 0;
+
+        for (int i = 0; i < affordable.Count; i++)
+        {
+            acc += recipeWeights[i];
+            if (roll < acc) return affordable[i];
+        }
+
+        return affordable[0];
+        }
+
+    }

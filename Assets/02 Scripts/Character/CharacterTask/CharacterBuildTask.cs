@@ -9,43 +9,55 @@ public class CharacterBuildTask
     private BuildRecipe _recipe;
     private TileNode _targetTile;
     private int _turnsRemaining;
+    
+    public bool LastFailedByMissingResource { get; private set; }
+    public ResourceType LastMissingResourceType { get; private set; } = ResourceType.None;
 
-    public IEnumerator RunTurn(CharacterEntity owner, int smallTurn, List<TileNode> activeNodes, SmallTurnLogController log, BuildRecipe[] recipes, int maxMoveTilesPerTurn)
+
+    public IEnumerator RunTurn(
+        CharacterEntity owner,
+        int smallTurn,
+        List<TileNode> activeNodes,
+        SmallTurnLogController log,
+        BuildRecipe[] recipes,
+        int maxMoveTilesPerTurn,
+        string forcedRecipeId = null)
     {
         if (!IsForced)
         {
-            if (recipes == null || recipes.Length == 0)
-            {
-                log.AddLog($"[{smallTurn} 턴] 건축 레시피가 없습니다.");
-                yield break;
-            }
+            LastFailedByMissingResource = false;
+            LastMissingResourceType = ResourceType.None;
 
-            _recipe = recipes[Random.Range(0, recipes.Length)];
-            if (_recipe == null || _recipe.Prefab == null)
-            {
-                log.AddLog($"[{smallTurn} 턴] 건축 레시피가 비어 있습니다.");
-                yield break;
-            }
+            if (recipes == null || recipes.Length == 0) yield break;
 
             PlayerResourceInventory inv = GameManager.Instance.PlayerInventory;
-            if (!CharacterTaskCommon.CanAfford(inv, _recipe.Costs))
-            {
-                log.AddLog($"[{smallTurn} 턴] {owner.Data.Name}은/는 재료가 부족합니다.");
-                yield break;
-            }
+            _recipe = PickStartRecipe(recipes, inv, forcedRecipeId);
 
-            _targetTile = FindNearestBuildableTile(owner.CurrentTileNode, activeNodes);
-            if (_targetTile == null)
+            if (_recipe == null)
             {
-                log.AddLog($"[{smallTurn} 턴] {owner.Data.Name}은/는 건축 가능한 타일이 없습니다.");
+                if (!string.IsNullOrEmpty(forcedRecipeId))
+                {
+                    BuildRecipe desired = FindRecipeById(recipes, forcedRecipeId);
+                    if (desired != null)
+                    {
+                        ResourceType miss = CharacterTaskCommon.GetFirstMissingResource(inv, desired.Costs);
+                        if (miss != ResourceType.None)
+                        {
+                            LastFailedByMissingResource = true;
+                            LastMissingResourceType = miss;
+                        }
+                    }
+                }
                 yield break;
             }
+            _targetTile = FindNearestBuildableTile(owner.CurrentTileNode, activeNodes);
+            if (_targetTile == null) { Clear(); yield break; }
 
             CharacterTaskCommon.ConsumeCosts(inv, _recipe.Costs);
             _turnsRemaining = Mathf.Max(1, _recipe.BuildTurns);
-
             IsForced = true;
         }
+        
 
         if (_targetTile == null || _targetTile.IsOccupied || _targetTile.HasResource)
         {
@@ -119,4 +131,39 @@ public class CharacterBuildTask
         _targetTile = null;
         _turnsRemaining = 0;
     }
+
+    private BuildRecipe FindRecipeById(BuildRecipe[] recipes, string id)
+    {
+        for (int i = 0; i < recipes.Length; i++)
+        {
+            BuildRecipe r = recipes[i];
+            if (r == null) continue;
+            if (r.Id == id) return r;
+        }
+        return null;
+    }
+
+    private BuildRecipe PickStartRecipe(BuildRecipe[] recipes, PlayerResourceInventory inv, string forcedRecipeId)
+    {
+        if (!string.IsNullOrEmpty(forcedRecipeId))
+        {
+            BuildRecipe forced = FindRecipeById(recipes, forcedRecipeId);
+            if (forced == null || forced.Prefab == null) return null;
+            if (!CharacterTaskCommon.CanAfford(inv, forced.Costs)) return null;
+            return forced;
+        }
+
+        List<BuildRecipe> affordable = new List<BuildRecipe>();
+        for (int i = 0; i < recipes.Length; i++)
+        {
+            BuildRecipe r = recipes[i];
+            if (r == null || r.Prefab == null) continue;
+            if (!CharacterTaskCommon.CanAfford(inv, r.Costs)) continue;
+            affordable.Add(r);
+        }
+
+        if (affordable.Count == 0) return null;
+        return affordable[Random.Range(0, affordable.Count)];
+    }
+
 }

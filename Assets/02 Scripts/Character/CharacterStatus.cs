@@ -36,6 +36,11 @@ public class CharacterStatus
     {
         Hunger = Mathf.Clamp(Hunger + value, 0f, data.MaxHunger);
     }
+    public void AddSleep(float value, CharacterData data)
+    {
+        Sleep = Mathf.Clamp(Sleep + value, 0f, data.MaxSleep);
+    }
+
 
     
 }
