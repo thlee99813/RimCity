@@ -55,6 +55,8 @@ public class TurnManager : Singleton<TurnManager>
             }
 
             UIManager.Instance.SmallTurnStart();
+            UIManager.Instance.SetSeasonText(GetSeasonText(CurrentBigTurn));
+
             float weatherHealthDelta = GetWeatherHealthDelta(_currentSelection.Weather);
             if (weatherHealthDelta < 0f)
             {
@@ -150,6 +152,22 @@ public class TurnManager : Singleton<TurnManager>
         yield return StartCoroutine(
             character.RunSmallTurn(_currentSelection, CurrentSmallTurn, activeNodes, _smallTurnLogController)
         );
+    }
+    private string GetSeasonText(int bigTurn)
+    {
+        int seasonIndex = (bigTurn - 1) % 4;
+        int year = ((bigTurn - 1) / 4);
+
+        string season;
+        switch (seasonIndex)
+        {
+            case 0: season = "봄"; break;
+            case 1: season = "여름"; break;
+            case 2: season = "가을"; break;
+            default: season = "겨울"; break;
+        }
+
+        return "서기 " + year + "년 " + season;
     }
 
 }

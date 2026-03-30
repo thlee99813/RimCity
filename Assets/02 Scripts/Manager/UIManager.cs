@@ -31,6 +31,9 @@ public class UIManager : Singleton<UIManager>
     [SerializeField] private Transform _slotParent;
     [SerializeField] private int _maxSlots = 20;
 
+    [SerializeField] private TMP_Text _seasonText;
+
+
     private readonly List<CharacterHeaderSlotUI> _spawnedSlots = new List<CharacterHeaderSlotUI>();
 
 
@@ -67,6 +70,10 @@ public class UIManager : Singleton<UIManager>
             _spawnedSlots.RemoveAt(i);
             return;
         }
+    }
+    public void SetSeasonText(string text)
+    {
+        _seasonText.text = text;
     }
 
     
