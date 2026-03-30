@@ -44,6 +44,9 @@ public class CharacterEntity : MonoBehaviour
     private const int StatMaxLevel = 11;
     private const int ActionsPerLevel = 3;
     public TileNode CurrentTileNode => _mover.CurrentTileNode;
+    private readonly List<string> _moodHintLines = new List<string>();
+    public string MoodHintText => _moodHintLines.Count > 0 ? string.Join("\n", _moodHintLines) : "";
+
 
     private void Awake()
     {
@@ -95,32 +98,21 @@ public class CharacterEntity : MonoBehaviour
 
         if (CurrentTileNode == null)
             SetCurrentTileNode(_mover.GetNearestTileNode(activeNodes, transform.position));
+        ClearMoodHints();
 
         CharacterNeedsController.StructureEffectReport report =
             _needsController.Tick(Status, Data, Equipment, selection.Weather, CurrentTileNode, activeNodes);
 
         if (report.HasAny)
         {
-            string effectText = "";
-            if (report.HasTorch) effectText += "횃불 ";
-            if (report.HasCampfire) effectText += "모닥불 ";
-            if (report.HasSweatingStone) effectText += "발한석 ";
-
-            logController.AddLog(
-                TextUtil.ApplyKoreanParticles(
-                    $"[{smallTurn} 턴] {Data.Name}은/는 {effectText}영향으로 기분이 좋아집니다."
-                )               
-            );
-
+            if (report.HasTorch) AddMoodHint("횃불에 의해 \n기분이 좋아집니다");
+            if (report.HasCampfire) AddMoodHint("모닥에 의해 \n기분이 좋아집니다");
+            if (report.HasSweatingStone) AddMoodHint("발한석에 의해 \n기분이 좋아집니다");
         }
 
         if (Status.Hunger <= 0f)
         {
-            logController.AddLog(
-                TextUtil.ApplyKoreanParticles(
-                    $"[{smallTurn} 턴] {Data.Name}은/는 배고파서 체력이 줄고 있습니다.({_healthDeltaWhenStarving})"
-                )
-            );
+            AddMoodHint($"배고픔으로 체력 감소 ({_healthDeltaWhenStarving})");
         }
 
         if (_lifeController.TryHandleDeath(this, smallTurn, logController)) yield break;
@@ -296,6 +288,18 @@ public class CharacterEntity : MonoBehaviour
             default: return "능력";
         }
 }
+private void ClearMoodHints()
+{
+    _moodHintLines.Clear();
+}
+
+private void AddMoodHint(string text)
+{
+    if (string.IsNullOrEmpty(text)) return;
+    if (_moodHintLines.Contains(text)) return;
+    _moodHintLines.Add(text);
+}
+
     
 
     

@@ -4,10 +4,22 @@ using UnityEngine;
 public class NameplateUI : MonoBehaviour
 {
     [SerializeField] private TMP_Text _nameText;
-    public RectTransform Rect => (RectTransform)transform;
+    [SerializeField] private RectTransform _rect;
+    [SerializeField] private TMP_Text _moodText;
 
-    public void SetName(string value)
+    public RectTransform Rect => _rect;
+
+    private void Awake()
     {
-        _nameText.text = value;
+    }
+
+    public void SetName(string nameText)
+    {
+        _nameText.text = nameText;
+    }
+
+    public void SetMoodText(string text)
+    {
+        _moodText.text = string.IsNullOrEmpty(text) ? "" : text;
     }
 }

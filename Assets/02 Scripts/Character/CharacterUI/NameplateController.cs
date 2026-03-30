@@ -18,6 +18,8 @@ public class NameplateController : MonoBehaviour
         for (int i = 0; i < characters.Count; i++)
         {
             CharacterEntity character = characters[i];
+            if (character == null || character.IsDead || character.Data == null) continue;
+
             Vector3 worldPos = character.transform.position + _headOffset;
 
             Vector3 viewport = _worldCamera.WorldToViewportPoint(worldPos);
@@ -40,10 +42,12 @@ public class NameplateController : MonoBehaviour
             }
 
             ui.SetName(character.Data.Name);
+            ui.SetMoodText(character.MoodHintText);
 
             Vector2 screenPos = RectTransformUtility.WorldToScreenPoint(_worldCamera, worldPos);
             RectTransformUtility.ScreenPointToLocalPointInRectangle(_canvasRect, screenPos, null, out Vector2 localPos);
             ui.Rect.anchoredPosition = localPos;
+
         }
 
         _removeBuffer.Clear();
@@ -52,7 +56,7 @@ public class NameplateController : MonoBehaviour
         {
             CharacterEntity registeredCharacter = characterToNameplate.Key;
 
-            if (!characters.Contains(registeredCharacter))
+            if (registeredCharacter == null || registeredCharacter.IsDead || !characters.Contains(registeredCharacter))
             {
                 _removeBuffer.Add(registeredCharacter);
             }
@@ -61,11 +65,12 @@ public class NameplateController : MonoBehaviour
         for (int i = 0; i < _removeBuffer.Count; i++)
         {
             CharacterEntity targetCharacter = _removeBuffer[i];
-            NameplateUI targetNameplate = _active[targetCharacter];
+            if (!_active.TryGetValue(targetCharacter, out NameplateUI targetNameplate)) continue;
 
             _pool.Release(targetNameplate);
             _active.Remove(targetCharacter);
         }
     }
+
 
 }

@@ -10,11 +10,7 @@ public class SmallTurnCameraFollow : MonoBehaviour
         _smallTurnCam.Follow = target;
     }
 
-    void Update()
-    {
-        Debug.Log(_smallTurnCam.transform.position);
-    }
-
+    
     public void ClearTarget()
     {
         _smallTurnCam.Follow = null;
