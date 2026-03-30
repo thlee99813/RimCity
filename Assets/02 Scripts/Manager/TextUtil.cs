@@ -23,6 +23,12 @@ public static class TextUtil
             TraitType.Tough => "강인함",
             TraitType.Diligent => "근면함",
             TraitType.Optimistic => "낙천적",
+            TraitType.AllRounder => "만능형",
+            TraitType.Inept => "둔재",
+            TraitType.Artisan => "장인",
+            TraitType.Hunter => "사냥꾼",
+            TraitType.Chatterbox => "수다쟁이",
+            TraitType.Coward => "겁쟁이",
             _ => t.ToString()
         };
     }
