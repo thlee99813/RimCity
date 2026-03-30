@@ -17,7 +17,7 @@ public class CharacterBrain
         Dictionary<SmallTurnActionType, int> weights = new Dictionary<SmallTurnActionType, int>
         {
             { SmallTurnActionType.Idle, 10 },
-            { SmallTurnActionType.Wander, 20 },
+            { SmallTurnActionType.Wander, 10 },
             { SmallTurnActionType.Gather, 20 },
             { SmallTurnActionType.Craft, 15 },
             { SmallTurnActionType.Build, 15 },

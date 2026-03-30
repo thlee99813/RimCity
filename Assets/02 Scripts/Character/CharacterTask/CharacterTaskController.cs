@@ -12,6 +12,8 @@ public class CharacterTaskController
     private readonly CharacterBuildTask _buildTask = new CharacterBuildTask();
     private readonly CharacterCraftTask _craftTask = new CharacterCraftTask();
     private readonly CharacterItemUseTask _itemUseTask = new CharacterItemUseTask();
+    private readonly CharacterSocialTask _socialTask = new CharacterSocialTask();
+
 
     private ResourceType _nextGatherType = ResourceType.None;
     private string _nextBuildRecipeId;
@@ -31,7 +33,7 @@ public class CharacterTaskController
     private const int WeatherPrepChance = 5;        
     private const int MissingFocusGatherChance = 45; 
 
-    private const int ForcedSleepRestTurns = 2;
+    private const int ForcedSleepRestTurns = 3;
     private const float ForcedSleepRecoverAmount = 60f;
 
     private const int BedReachableTurns = 2;
@@ -66,8 +68,9 @@ public class CharacterTaskController
         if (_gatherTask.IsForced) return SmallTurnActionType.Gather;
         if (_buildTask.IsForced) return SmallTurnActionType.Build;
         if (_craftTask.IsForced) return SmallTurnActionType.Craft;
+        if (_socialTask.IsForced) return SmallTurnActionType.Social;
 
-        // 수면 낮음: 3턴 내 침대 접근 우선
+
         if (status.Sleep < SleepLowThreshold)
         {
             // 2턴(8타일) 내 침대 우선
@@ -477,7 +480,8 @@ public class CharacterTaskController
             return;
         }
 
-            logController.AddLog(TextUtil.ApplyKoreanParticles($"[{smallTurn} 턴] {owner.Data.Name}은/는 휴식을 취합니다."));
+            owner.Status.AddSleep(20f, owner.Data);
+            logController.AddLog(TextUtil.ApplyKoreanParticles($"[{smallTurn} 턴] {owner.Data.Name}은/는 휴식을 취합니다. (수면 +20)"));
 
     }
 
@@ -510,4 +514,10 @@ public class CharacterTaskController
     {
         _itemUseTask.RunUseMedkitTurn(owner, smallTurn, logController);
     }
+    public IEnumerator RunSocialTurn(CharacterEntity owner, int smallTurn, List<TileNode> activeNodes, SmallTurnLogController logController)
+    {
+        int socialLevel = owner.GetStatLevel(StatType.Social);
+        yield return _socialTask.RunTurn(owner, smallTurn, activeNodes, logController, _maxMoveTilesPerTurn, socialLevel);
+    }
+
 }

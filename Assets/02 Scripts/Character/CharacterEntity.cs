@@ -204,6 +204,12 @@ public class CharacterEntity : MonoBehaviour
             if (_lifeController.TryHandleDeath(this, smallTurn, logController)) yield break;
             yield break;
         }
+        if (action == SmallTurnActionType.Social)
+        {
+            yield return _taskController.RunSocialTurn(this, smallTurn, activeNodes, logController);
+            if (_lifeController.TryHandleDeath(this, smallTurn, logController)) yield break;
+            yield break;
+        }
 
         logController.AddLog(
             TextUtil.ApplyKoreanParticles(
