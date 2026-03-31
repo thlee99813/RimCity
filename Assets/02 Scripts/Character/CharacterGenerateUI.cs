@@ -41,8 +41,7 @@ public class CharacterGenerateUI : MonoBehaviour
         _previewCharacter = GameManager.Instance.CharacterGenerator.SpawnCharacter(_characterName);
         
         ApplyCharacterToUI(_previewCharacter.Data);
-        UIManager.Instance.AddCharacterSlot(_previewCharacter.Data.Id,_previewCharacter.Data.Name);
-
+        UIManager.Instance.AddCharacterSlot(_previewCharacter);
 
         _nameInputPage.SetActive(false);
         _characterStatPage.SetActive(true);

@@ -34,7 +34,8 @@ public class EncounterEventController : MonoBehaviour
         CharacterEntity spawned = _characterGenerator.SpawnCharacterFromData(_candidate, enteredName);
 
         if (spawned != null)
-            UIManager.Instance.AddCharacterSlot(spawned.Data.Id, spawned.Data.Name);
+        UIManager.Instance.AddCharacterSlot(spawned);
+
 
         _isWaiting = false;
     }

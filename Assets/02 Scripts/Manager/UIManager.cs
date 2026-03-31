@@ -68,15 +68,17 @@ public class UIManager : Singleton<UIManager>
         _smallTurnPage.SetActive(false);
 
     }
-    public void AddCharacterSlot(string characterId, string characterName)
+    public void AddCharacterSlot(CharacterEntity character)
     {
         if (_spawnedSlots.Count >= _maxSlots) return;
+        if (character == null || character.Data == null) return;
 
         GameObject slotObject = Instantiate(_slotPrefab.gameObject, _slotParent);
         CharacterHeaderSlotUI slotUI = slotObject.GetComponent<CharacterHeaderSlotUI>();
-        slotUI.SetData(characterId, characterName);
+        slotUI.Bind(character);
         _spawnedSlots.Add(slotUI);
     }
+
 
     public void RemoveCharacterSlot(string characterId)
     {
@@ -171,6 +173,16 @@ public class UIManager : Singleton<UIManager>
             yield return new WaitForSecondsRealtime(interval);
         }
     }
+    private void LateUpdate()
+    {
+        for (int i = 0; i < _spawnedSlots.Count; i++)
+        {
+            CharacterHeaderSlotUI slotUI = _spawnedSlots[i];
+            if (slotUI == null) continue;
+            slotUI.Refresh();
+        }
+    }
+
 
 
     
