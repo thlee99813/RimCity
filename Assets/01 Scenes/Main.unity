@@ -1804,6 +1804,7 @@ GameObject:
   - component: {fileID: 18853928}
   - component: {fileID: 18853927}
   - component: {fileID: 18853929}
+  - component: {fileID: 18853930}
   m_Layer: 5
   m_Name: InputName
   m_TagString: Untagged
@@ -1970,6 +1971,19 @@ MonoBehaviour:
   isAlert: 0
   m_InputValidator: {fileID: 0}
   m_ShouldActivateOnSelect: 1
+--- !u!114 &18853930
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 18853925}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cc33a39070010f94fb1c2dd721c1286d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: WebGLInput::WebGLSupport.WebGLInput
+  showHtmlElement: 0
 --- !u!114 &23354350 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 579380267833016638, guid: a148cf0d3f62832479442ebdab77de5b, type: 3}
@@ -22598,7 +22612,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 60.3, y: 518}
+  m_AnchoredPosition: {x: 0, y: 494}
   m_SizeDelta: {x: 0, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &296549048
@@ -30394,7 +30408,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0.00012207031, y: 0.000061035156}
+  m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: -0.000045776367}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &454061414
@@ -77433,6 +77447,7 @@ GameObject:
   - component: {fileID: 1096768255}
   - component: {fileID: 1096768254}
   - component: {fileID: 1096768253}
+  - component: {fileID: 1096768256}
   m_Layer: 5
   m_Name: InputName
   m_TagString: Untagged
@@ -77599,6 +77614,19 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1096768251}
   m_CullTransparentMesh: 1
+--- !u!114 &1096768256
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1096768251}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cc33a39070010f94fb1c2dd721c1286d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: WebGLInput::WebGLSupport.WebGLInput
+  showHtmlElement: 0
 --- !u!114 &1098681067 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 880527363932496672, guid: a148cf0d3f62832479442ebdab77de5b, type: 3}
@@ -123900,7 +123928,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 377, y: -11.000061}
+  m_AnchoredPosition: {x: 377, y: -11}
   m_SizeDelta: {x: -458.53735, y: 211.6324}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1773964397
