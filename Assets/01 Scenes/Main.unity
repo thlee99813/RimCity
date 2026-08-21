@@ -10054,7 +10054,6 @@ Transform:
   - {fileID: 94924419}
   - {fileID: 330033165}
   - {fileID: 896326801}
-  - {fileID: 1471055287}
   - {fileID: 747233173}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -37907,10 +37906,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0cd44c1031e13a943bb63640046fad76, type: 3}
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.CanvasScaler
-  m_UiScaleMode: 0
+  m_UiScaleMode: 1
   m_ReferencePixelsPerUnit: 100
   m_ScaleFactor: 1
-  m_ReferenceResolution: {x: 800, y: 600}
+  m_ReferenceResolution: {x: 1920, y: 1080}
   m_ScreenMatchMode: 0
   m_MatchWidthOrHeight: 0
   m_PhysicalUnit: 3
@@ -91524,8 +91523,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -36, y: 0}
-  m_SizeDelta: {x: 1820, y: 1100}
+  m_AnchoredPosition: {x: -18.425, y: -29.7387}
+  m_SizeDelta: {x: 1855.1499, y: 1040.5227}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1285184935
 MonoBehaviour:
@@ -98550,50 +98549,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6fd94fad8ab978140889088c41fd0c82, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TileNode
---- !u!1 &1471055286
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1471055287}
-  - component: {fileID: 1471055288}
-  m_Layer: 0
-  m_Name: BigTurnSummaryUIController
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &1471055287
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1471055286}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 111896644}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1471055288
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1471055286}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 17eb7612882cc6143b335d3365bceeed, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::BigTurnSummaryUI
 --- !u!114 &1471605057 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 4473049470020372511, guid: a148cf0d3f62832479442ebdab77de5b, type: 3}
@@ -127563,7 +127518,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 1390, y: 775}
+  m_AnchoredPosition: {x: 1390, y: 735}
   m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1879579843 stripped

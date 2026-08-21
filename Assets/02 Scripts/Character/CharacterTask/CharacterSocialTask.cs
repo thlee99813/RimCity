@@ -13,6 +13,7 @@ public enum SocialInteractionType
 public class CharacterSocialTask
 {
     public bool IsForced { get; private set; }
+    public CharacterTaskState State { get; private set; } = CharacterTaskState.Ready;
 
     private CharacterEntity _target;
     private SocialInteractionType _interaction;
@@ -21,9 +22,11 @@ public class CharacterSocialTask
     {
         if (!IsForced)
         {
+            State = CharacterTaskState.Ready;
             if (!TryFindTarget(owner, activeNodes, maxMoveTilesPerTurn * 2, out _target))
             {
                 log.AddLog(TextUtil.ApplyKoreanParticles($"[{smallTurn} 턴] {owner.Data.Name}은/는 허공에 혼잣말을 뱉습니다."));
+                State = CharacterTaskState.Failure;
                 yield break;
             }
 
@@ -31,16 +34,19 @@ public class CharacterSocialTask
             if (Random.Range(0, 100) >= triggerChance)
             {
                 log.AddLog(TextUtil.ApplyKoreanParticles($"[{smallTurn} 턴] {owner.Data.Name}은/는 허공에 혼잣말을 뱉습니다."));
+                State = CharacterTaskState.Failure;
                 yield break;
             }
 
             _interaction = PickInteraction(socialLevel);
             IsForced = true;
+            State = CharacterTaskState.Running;
         }
 
         if (_target == null || _target.IsDead || _target.CurrentTileNode == null)
         {
             Clear();
+            State = CharacterTaskState.Failure;
             log.AddLog(TextUtil.ApplyKoreanParticles($"[{smallTurn} 턴] {owner.Data.Name}은/는 허공에 혼잣말을 뱉습니다."));
             yield break;
         }
@@ -51,11 +57,13 @@ public class CharacterSocialTask
             if (path == null || path.Count == 0)
             {
                 Clear();
+                State = CharacterTaskState.Failure;
                 log.AddLog(TextUtil.ApplyKoreanParticles($"[{smallTurn} 턴] {owner.Data.Name}은/는 허공에 혼잣말을 뱉습니다."));
                 yield break;
             }
 
             int moveCount = Mathf.Min(maxMoveTilesPerTurn, path.Count);
+            State = CharacterTaskState.Running;
             log.AddLog(TextUtil.ApplyKoreanParticles($"[{smallTurn} 턴] {owner.Data.Name}은/는 {_target.Data.Name}에게 다가갑니다. ({moveCount}칸)"));
 
             for (int i = 0; i < moveCount; i++)
@@ -67,6 +75,7 @@ public class CharacterSocialTask
         ApplyInteraction(owner, _target, socialLevel, smallTurn, log);
         owner.AddStatActionCount(StatType.Social, 1, smallTurn, log);
         Clear();
+        State = CharacterTaskState.Success;
     }
 
     private void ApplyInteraction(CharacterEntity owner, CharacterEntity target, int socialLevel, int smallTurn, SmallTurnLogController log)

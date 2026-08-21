@@ -5,6 +5,7 @@ using System.Collections.Generic;
 public class CharacterCraftTask
 {
     public bool IsForced { get; private set; }
+    public CharacterTaskState State { get; private set; } = CharacterTaskState.Ready;
 
     private CraftRecipe _recipe;
     private int _turnsRemaining;
@@ -23,10 +24,15 @@ public class CharacterCraftTask
     {
         if (!IsForced)
         {
+            State = CharacterTaskState.Ready;
             LastFailedByMissingResource = false;
             LastMissingResourceType = ResourceType.None;
 
-            if (recipes == null || recipes.Length == 0) yield break;
+            if (recipes == null || recipes.Length == 0)
+            {
+                State = CharacterTaskState.Failure;
+                yield break;
+            }
 
             PlayerResourceInventory inv = GameManager.Instance.PlayerInventory;
             _recipe = PickStartRecipe(recipes, inv, forcedRecipeId, craftLevel);
@@ -47,12 +53,13 @@ public class CharacterCraftTask
                     }
                 }
                 log.AddLog(TextUtil.ApplyKoreanParticles($"[{smallTurn} 턴] {owner.Data.Name}은/는 제작 가능한 작업이 없습니다."));
-
+                State = CharacterTaskState.Failure;
                 yield break;
             }
             CharacterTaskCommon.ConsumeCosts(inv, _recipe.Costs);
             _turnsRemaining = Mathf.Max(1, _recipe.CraftTurns);
             IsForced = true;
+            State = CharacterTaskState.Running;
 
         }
 
@@ -60,6 +67,7 @@ public class CharacterCraftTask
 
         if (_turnsRemaining > 0)
         {
+            State = CharacterTaskState.Running;
             log.AddLog(TextUtil.ApplyKoreanParticles($"[{smallTurn} 턴] {owner.Data.Name}은/는 {_recipe.DisplayName} 제작 중입니다. ({_turnsRemaining}턴 남음)"));
             yield break;
         }
@@ -69,6 +77,7 @@ public class CharacterCraftTask
         {
             log.AddLog(TextUtil.ApplyKoreanParticles($"[{smallTurn} 턴] {owner.Data.Name}은/는 {_recipe.DisplayName}을 제작하다가 손이 삐끗했습니다."));
             Clear();
+            State = CharacterTaskState.Failure;
             yield break;
         }
 
@@ -78,6 +87,7 @@ public class CharacterCraftTask
         owner.AddStatActionCount(StatType.Craft, 1, smallTurn, log);
 
         Clear();
+        State = CharacterTaskState.Success;
     }
 
     private void ApplyCraftResult(CharacterEntity owner, PlayerResourceInventory inv, string itemId)

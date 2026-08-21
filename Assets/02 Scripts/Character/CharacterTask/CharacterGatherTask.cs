@@ -5,6 +5,7 @@ using UnityEngine;
 public class CharacterGatherTask
 {
     public bool IsForced { get; private set; }
+    public CharacterTaskState State { get; private set; } = CharacterTaskState.Ready;
 
     private ResourceNode _targetResource;
     private TileNode _targetTile;
@@ -14,6 +15,7 @@ public IEnumerator RunTurn(CharacterEntity owner, int smallTurn, List<TileNode> 
     {
        if (!IsForced)
         {
+            State = CharacterTaskState.Ready;
             int gatherLevel = owner.GetStatLevel(StatType.Gather);
 
             ResourceType pick = preferredType;
@@ -26,19 +28,27 @@ public IEnumerator RunTurn(CharacterEntity owner, int smallTurn, List<TileNode> 
                 pick = DecideGatherTargetType(owner.CurrentTileNode, activeNodes, gatherLevel);
 
             if (pick == ResourceType.None)
+            {
+                State = CharacterTaskState.Failure;
                 yield break;
+            }
 
             if (!TryAcquire(owner.CurrentTileNode, activeNodes, pick))
+            {
+                State = CharacterTaskState.Failure;
                 yield break;
+            }
 
 
             IsForced = true;
+            State = CharacterTaskState.Running;
         }
 
 
         if (!IsValid(activeNodes))
         {
             Clear();
+            State = CharacterTaskState.Failure;
             log.AddLog(TextUtil.ApplyKoreanParticles($"[{smallTurn} 턴] {owner.Data.Name}은/는 수집 대상을 잃어버렸습니다."));
             yield break;
         }
@@ -50,6 +60,7 @@ public IEnumerator RunTurn(CharacterEntity owner, int smallTurn, List<TileNode> 
             log.AddLog(TextUtil.ApplyKoreanParticles($"[{smallTurn} 턴] {owner.Data.Name}은/는 {ToKorean(_targetType)}를 수집합니다."));
             owner.AddStatActionCount(StatType.Gather, 1, smallTurn, log);
             Clear();
+            State = CharacterTaskState.Success;
             yield break;
         }
 
@@ -57,11 +68,13 @@ public IEnumerator RunTurn(CharacterEntity owner, int smallTurn, List<TileNode> 
         if (path == null || path.Count == 0)
         {
             Clear();
+            State = CharacterTaskState.Failure;
             log.AddLog(TextUtil.ApplyKoreanParticles($"[{smallTurn} 턴] {owner.Data.Name}은/는 수집 위치로 이동하지 못합니다."));
             yield break;
         }
 
         int moveCount = Mathf.Min(maxMoveTilesPerTurn, path.Count);
+        State = CharacterTaskState.Running;
         log.AddLog(TextUtil.ApplyKoreanParticles($"[{smallTurn} 턴] {owner.Data.Name}은/는 {ToKorean(_targetType)}를 수집하러 이동합니다. ({moveCount}칸)"));
 
         for (int i = 0; i < moveCount; i++)

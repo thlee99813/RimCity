@@ -15,6 +15,7 @@ public class CharacterEntity : MonoBehaviour
 
     private CharacterBrain _brain = new CharacterBrain();
     private CharacterTaskController _taskController;
+    private CharacterGoapController _goapController;
 
     [Header("매턴 움직임")]
     [SerializeField] private float _moveDuration = 0.35f;
@@ -64,6 +65,12 @@ public class CharacterEntity : MonoBehaviour
         _healthDeltaWhenStarving, _moodZeroDamageMultiplier);       
         _lifeController = new CharacterLifeController();
         _taskController = new CharacterTaskController(_maxMoveTilesPerTurn, _buildRecipes, _craftRecipes);
+        _goapController = new CharacterGoapController(
+            _taskController,
+            _brain,
+            _maxMoveTilesPerTurn,
+            _buildRecipes,
+            _craftRecipes);
         _combatTask = new CharacterCombatTask();
 
     }
@@ -132,123 +139,16 @@ public class CharacterEntity : MonoBehaviour
             if (_lifeController.TryHandleDeath(this, smallTurn, logController)) yield break;
             yield break;
         }
-        SmallTurnActionType action = _taskController.ResolveAction(this, Data, Status, Equipment, selection, activeNodes, _brain);
-        
-        if (action == SmallTurnActionType.MoveToShelter)
-        {
-            yield return _taskController.RunMoveToShelterTurn(this, smallTurn, activeNodes, logController);
-            if (_lifeController.TryHandleDeath(this, smallTurn, logController)) yield break;
-            yield break;
-        }
-        if (action == SmallTurnActionType.MoveToAllyCombat)
-        {
-            yield return _taskController.RunMoveToAllyCombatTurn(this, smallTurn, activeNodes, logController);
-            if (_lifeController.TryHandleDeath(this, smallTurn, logController)) yield break;
-            yield break;
-        }
-        if (action == SmallTurnActionType.MoveToGeneratorRaid)
-        {
-            yield return _taskController.RunMoveToGeneratorRaidTurn(this, smallTurn, activeNodes, logController);
-            if (_lifeController.TryHandleDeath(this, smallTurn, logController)) yield break;
-            yield break;
-        }
-        if (action == SmallTurnActionType.MoveToEnemyCombat)
-        {
-            yield return _taskController.RunMoveToEnemyCombatTurn(this, smallTurn, activeNodes, logController);
-            if (_lifeController.TryHandleDeath(this, smallTurn, logController)) yield break;
-            yield break;
-        }
 
+        yield return _goapController.RunTurn(
+            this,
+            selection,
+            smallTurn,
+            activeNodes,
+            logController,
+            _berryHungerRecoverAmount);
 
-        if (action == SmallTurnActionType.Rest)
-        {
-            _taskController.RunRestTurn(this, smallTurn, logController);
-            if (_lifeController.TryHandleDeath(this, smallTurn, logController)) yield break;
-            yield break;
-        }
-
-
-        if (action == SmallTurnActionType.Gather)
-        {
-            yield return _taskController.RunGatherTurn(this, smallTurn, activeNodes, logController);
-            if (_lifeController.TryHandleDeath(this, smallTurn, logController)) yield break;
-            yield break;
-        }
-
-        if (action == SmallTurnActionType.Eat)
-        {
-            _taskController.RunEatAction(this, smallTurn, logController, _berryHungerRecoverAmount);
-            if (_lifeController.TryHandleDeath(this, smallTurn, logController)) yield break;
-            yield break;
-        }
-
-        if (action == SmallTurnActionType.Build)
-        {
-            yield return _taskController.RunBuildTurn(this, smallTurn, activeNodes, logController);
-            if (_lifeController.TryHandleDeath(this, smallTurn, logController)) yield break;
-            yield break;
-        }
-
-        if (action == SmallTurnActionType.Craft)
-        {
-            yield return _taskController.RunCraftTurn(this, smallTurn, logController);
-            if (_lifeController.TryHandleDeath(this, smallTurn, logController)) yield break;
-            yield break;
-        }
-
-        if (action == SmallTurnActionType.EquipWoodenSpear)
-        {
-            _taskController.RunEquipWoodenSpearTurn(this, smallTurn, logController);
-            if (_lifeController.TryHandleDeath(this, smallTurn, logController)) yield break;
-            yield break;
-        }
-
-        if (action == SmallTurnActionType.EquipStoneSpear)
-        {
-            _taskController.RunEquipStoneSpearTurn(this, smallTurn, logController);
-            if (_lifeController.TryHandleDeath(this, smallTurn, logController)) yield break;
-            yield break;
-        }
-
-        if (action == SmallTurnActionType.EquipFan)
-        {
-            _taskController.RunEquipFanTurn(this, smallTurn, logController);
-            if (_lifeController.TryHandleDeath(this, smallTurn, logController)) yield break;
-            yield break;
-        }
-
-        if (action == SmallTurnActionType.UseBandage)
-        {
-            _taskController.RunUseBandageTurn(this, smallTurn, logController);
-            if (_lifeController.TryHandleDeath(this, smallTurn, logController)) yield break;
-            yield break;
-        }
-
-        if (action == SmallTurnActionType.UseMedkit)
-        {
-            _taskController.RunUseMedkitTurn(this, smallTurn, logController);
-            if (_lifeController.TryHandleDeath(this, smallTurn, logController)) yield break;
-            yield break;
-        }
-        if (action == SmallTurnActionType.Social)
-        {
-            yield return _taskController.RunSocialTurn(this, smallTurn, activeNodes, logController);
-            if (_lifeController.TryHandleDeath(this, smallTurn, logController)) yield break;
-            yield break;
-        }
-
-        logController.AddLog(
-            TextUtil.ApplyKoreanParticles(
-                $"[{smallTurn} 턴] {Data.Name}은/는 {CharacterActionText.ToActionText(action)}"
-            )
-        );
-
-        if (action == SmallTurnActionType.Wander)
-        {
-            TileNode nextNode = _mover.GetRandomNeighborNode(CurrentTileNode, activeNodes);
-            if (nextNode != null)
-                yield return MoveToTile(nextNode);
-        }
+        if (_lifeController.TryHandleDeath(this, smallTurn, logController)) yield break;
     }
 
 

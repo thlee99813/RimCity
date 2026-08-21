@@ -5,6 +5,7 @@ using UnityEngine;
 public class CharacterBuildTask
 {
     public bool IsForced { get; private set; }
+    public CharacterTaskState State { get; private set; } = CharacterTaskState.Ready;
 
     private BuildRecipe _recipe;
     private TileNode _targetTile;
@@ -26,10 +27,15 @@ public class CharacterBuildTask
     {
         if (!IsForced)
         {
+            State = CharacterTaskState.Ready;
             LastFailedByMissingResource = false;
             LastMissingResourceType = ResourceType.None;
 
-            if (recipes == null || recipes.Length == 0) yield break;
+            if (recipes == null || recipes.Length == 0)
+            {
+                State = CharacterTaskState.Failure;
+                yield break;
+            }
 
             PlayerResourceInventory inv = GameManager.Instance.PlayerInventory;
             _recipe = PickStartRecipe(recipes, inv, forcedRecipeId, buildLevel);
@@ -50,26 +56,29 @@ public class CharacterBuildTask
                     }
                 }
                 log.AddLog(TextUtil.ApplyKoreanParticles($"[{smallTurn} 턴] {owner.Data.Name}은/는 건설 가능한 작업이 없습니다."));
-
+                State = CharacterTaskState.Failure;
                 yield break;
             }
             _targetTile = FindNearestBuildableTile(owner.CurrentTileNode, activeNodes);
             if (_targetTile == null) 
             { 
                 log.AddLog(TextUtil.ApplyKoreanParticles($"[{smallTurn} 턴] {owner.Data.Name}은/는 건설할 위치를 찾지 못했습니다."));
-
-                Clear(); yield break; 
+                Clear();
+                State = CharacterTaskState.Failure;
+                yield break;
             }
 
             CharacterTaskCommon.ConsumeCosts(inv, _recipe.Costs);
             _turnsRemaining = Mathf.Max(1, _recipe.BuildTurns);
             IsForced = true;
+            State = CharacterTaskState.Running;
         }
         
 
         if (_targetTile == null || _targetTile.IsOccupied || _targetTile.HasResource)
         {
             Clear();
+            State = CharacterTaskState.Failure;
             yield break;
         }
 
@@ -79,10 +88,12 @@ public class CharacterBuildTask
             if (path == null || path.Count == 0)
             {
                 Clear();
+                State = CharacterTaskState.Failure;
                 yield break;
             }
 
             int moveCount = Mathf.Min(maxMoveTilesPerTurn, path.Count);
+            State = CharacterTaskState.Running;
             log.AddLog(TextUtil.ApplyKoreanParticles($"[{smallTurn} 턴] {owner.Data.Name}은/는 {_recipe.DisplayName} 건설 위치로 이동합니다. ({moveCount}칸)"));
 
             for (int i = 0; i < moveCount; i++)
@@ -94,6 +105,7 @@ public class CharacterBuildTask
        _turnsRemaining--;
         if (_turnsRemaining > 0)
         {
+            State = CharacterTaskState.Running;
             log.AddLog(TextUtil.ApplyKoreanParticles($"[{smallTurn} 턴] {owner.Data.Name}은/는 {_recipe.DisplayName} 건설 중입니다. ({_turnsRemaining}턴 남음)"));
             yield break;
         }
@@ -103,6 +115,7 @@ public class CharacterBuildTask
         {
             log.AddLog(TextUtil.ApplyKoreanParticles($"[{smallTurn} 턴] {owner.Data.Name}은/는 {_recipe.DisplayName}을 건설하다가 손이 삐끗했습니다."));
             Clear();
+            State = CharacterTaskState.Failure;
             yield break;
         }
 
@@ -116,6 +129,7 @@ public class CharacterBuildTask
         owner.AddStatActionCount(StatType.Build, 1, smallTurn, log);
 
         Clear();
+        State = CharacterTaskState.Success;
     }
 
     private TileNode FindNearestBuildableTile(TileNode from, List<TileNode> activeNodes)
